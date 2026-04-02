@@ -1,0 +1,176 @@
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const User = require("../Models/user-model");
+const { saveRefreshToken, deleteRefreshToken, blacklistToken } = require("../utils/tokenCache");
+
+// Register new user
+exports.registerUser = async (req, res) => {
+    try {
+        const { username, email, password } = req.body;
+
+        // validate date
+        if (!username || !email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid details!!"
+            })
+        }
+
+        // validate if user already exist
+        const existingUser = await User.findOne({ email });
+
+        if (existingUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User already exists!!"
+            })
+        }
+
+        // hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // create new user
+        const newUser = await User.create({ username, email, password: hashedPassword });
+
+        // sign a token
+        const accessToken = jwt.sign(
+            { id: newUser._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "1d"}
+        );
+
+        // sign in refreshToken
+        const refreshToken = jwt.sign(
+            { id: newUser._id},
+            process.env.JWT_REFRESH_SECRET,
+            { expiresIn: "7d" }
+        )
+
+        // save refresh token in redis with userId as key
+        await saveRefreshToken(newUser._id.toString(), refreshToken);
+
+        return res.status(201).json({
+            success: true,
+            message: "Account created successfully!!",
+            accessToken,
+            refreshToken,
+            user: {
+                _id: newUser._id,
+                email: newUser.email,
+                username: newUser.username
+            }
+        })
+    } catch(err) {
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong!!",
+            error: err.message
+        })
+    }
+}
+
+// Login existing user
+exports.loginUser = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // validate data
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid email or password!!"
+            })
+        }
+
+        // validate if user exists
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found!!"
+            })
+        }
+
+        // check password length
+        if (password.length < 6 ) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must be at least 6 characters!!"
+            })
+        }
+
+        // validate password
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid password!!"
+            })
+        }
+
+        const accessToken = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "1d" }
+        )
+
+        const refreshToken = jwt.sign(
+            { id: user._id },
+            process.env.JWT_REFRESH_SECRET,
+            { expiresIn: "7d" }
+        )
+
+        // save token to redis
+        await saveRefreshToken(user._id.toString(), refreshToken);
+
+        return res.status(200).json({
+            success: true,
+            message: "LoggedIn Successfully!!",
+            accessToken,
+            refreshToken,
+            user: {
+                _id: user._id,
+                email: user.email,
+                username: user.username
+            }
+        })
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong!!",
+            error: err.message
+        })
+    }
+}
+
+// Logout user
+exports.logoutUser = async (req, res) => {
+    try {
+        const userId      = req.user.id;
+        const accessToken = req.headers.authorization?.split(" ")[1];
+
+        // decode to get remaining TTL for blacklisting
+        const decoded  = jwt.decode(accessToken);
+        const ttl      = decoded.exp - Math.floor(Date.now() / 1000); // seconds left
+
+        await Promise.all([
+            deleteRefreshToken(userId),         // remove refresh token
+            blacklistToken(accessToken, ttl),   // blacklist access token
+        ]);
+
+        req.session.destroy();
+
+        return res.status(200).json({
+            success: true,
+            message: "Logged out successfully!!"
+        });
+
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong!!", error: err.message
+        });
+    }
+};
