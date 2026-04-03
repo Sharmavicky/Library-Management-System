@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { verifyToken, isAdmin } = require("../../middleware/authMiddleWare");
+const { verifyToken, isAdmin } = require("../middleware/authMiddleWare");
+const validate = require("../middleware/validate")
+const { updateBookSchema } = require("../validators/issueValidator");
 const {
     getAllBooks,
     getBookById,
@@ -13,7 +15,7 @@ const {
 router.get("/:bookId", verifyToken, getBookById); // GET /api/books/:bookId
 
 // Update book details (Protected route, accessible by admins only)
-router.put("/:bookId", verifyToken, isAdmin, updateBook); // PUT /api/books/:bookId
+router.put("/:bookId", verifyToken, isAdmin, validate(updateBookSchema), updateBook); // PUT /api/books/:bookId
 
 // Delete a book (Protected route, accessible by admins only)
 router.delete("/:bookId", verifyToken, isAdmin, deleteBook); // DELETE /api/books/:bookId
