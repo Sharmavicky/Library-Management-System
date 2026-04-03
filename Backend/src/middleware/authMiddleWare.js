@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
-const { isTokenBlacklisted } = require("../utils/tokenCache");
-const User = require("../Models/modelExporter").User;
+const { isTokenBlacklisted } = require("../../utils/tokenCache");
+const User = require("../../Models/modelExporter").User;
 
 // Authentication middleware to verify JWT token
 const verifyToken = async (req, res, next) => {
