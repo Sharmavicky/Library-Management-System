@@ -8,6 +8,8 @@ const { redisClient, connectRedis } = require("./src/config/redis");
 const authRoutes = require("./src/routes/authRoutes");
 const bookRoutes = require("./src/routes/bookRoutes");
 const issueRoutes = require("./src/routes/issueRoute");
+const userRoutes = require("./src/routes/userRoutes");
+const errorHandler = require("./src/middleware/errorHandler");
 
 const app = express();
 
@@ -47,6 +49,12 @@ app.use("/api/books", bookRoutes);
 
 // issue routes
 app.use("/api/issues", issueRoutes);
+
+// user or member routes
+app.use("/api/users", userRoutes);
+
+// error Handler
+app.use(errorHandler);
 
 // Connect to Redis and DB first, then start the server
 const startServer = async () => {
