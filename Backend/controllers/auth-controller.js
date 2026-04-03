@@ -148,7 +148,7 @@ exports.loginUser = async (req, res) => {
 // Logout user
 exports.logoutUser = async (req, res) => {
     try {
-        const userId      = req.user.id;
+        const userId      = req.user._id;
         const accessToken = req.headers.authorization?.split(" ")[1];
 
         // decode to get remaining TTL for blacklisting
