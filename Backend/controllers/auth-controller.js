@@ -1,7 +1,12 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../Models/user-model");
-const { saveRefreshToken, deleteRefreshToken, blacklistToken } = require("../utils/tokenCache");
+const {
+    saveRefreshToken,
+    deleteRefreshToken,
+    blacklistToken,
+    getRefreshToken
+} = require("../utils/tokenCache");
 
 // Register new user
 exports.registerUser = async (req, res) => {
@@ -174,3 +179,99 @@ exports.logoutUser = async (req, res) => {
         });
     }
 };
+
+// Refresh Access Token
+exports.refreshAccessToken = async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+
+        // check if refresh token is provided
+        if (!refreshToken) {
+            return res.status(400).json({
+                success: false,
+                message: "Refresh Token is Required!!"
+            })
+        }
+
+        // verify refreshToken signature
+        let decoded;
+        try {
+            decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+        } catch (err) {
+            if (err.name === "TokenExpiredError") {
+                return res.status(401).json({
+                    success: false,
+                    message: "Refresh token Expired!! Please login again."
+                })
+            }
+
+            return res.status(401).json({
+                success: false,
+                message: "Invalid Token!!"
+            })
+        }
+
+        // check if refreshToken is stored in Redis
+        const storedToken = getRefreshToken(decoded.id);
+        if (!storedToken) {
+            return res.status(400).json({
+                success: false,
+                message: "Refresh Token not found!! Please login again"
+            })
+        }
+
+        // check if stored token matches with sent one
+        if (storedToken !== refreshToken) {
+            return res.status(401).json({
+                success: false,
+                message: "Refresh Token mismatch!! Please login again"
+            })
+        }
+
+        // check if user exits and still active
+        const user = await User.findById(decoded.id);
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "User no longer exists"
+            })
+        }
+
+        if (!user.isActive) {
+            return res.status(400).json({
+                success: false,
+                message: "Your account has been blocked. Please contact admin!!"
+            })
+        }
+
+        // generate new access token
+        const newAccessToken = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "1d" }
+        );
+
+        // generate new refreshToken
+        const newRefreshToken = jwt.sign(
+            { id: user._id },
+            process.env.JWT_REFRESH_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        // save new refreshToken in Redis
+        await saveRefreshToken(user._id.toString(), newRefreshToken);
+
+        return res.status(200).json({
+            success: true,
+            message: "Token refreshed successfully!!",
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken
+        })
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong",
+            error: err.message
+        })
+    }
+}

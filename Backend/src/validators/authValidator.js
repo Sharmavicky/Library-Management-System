@@ -20,4 +20,9 @@ const loginSchema = z.object({
         .min(6, "Password must be atleast 6 characters"),
 });
 
-module.exports = { registerSchema, loginSchema };
+const refreshTokenSchema = z.object({
+    refreshToken: z.string()
+        .min(1, "Refresh Token needed!!")
+});
+
+module.exports = { registerSchema, loginSchema, refreshTokenSchema }
