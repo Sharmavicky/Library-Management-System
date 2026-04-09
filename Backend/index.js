@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const morgan = require("morgan");
 const session = require("express-session");
 const { RedisStore } = require("connect-redis");
 const dbConnection = require("./src/config/dbConnection");
@@ -15,9 +16,13 @@ const app = express();
 
 // middleware to parse JSON requests
 app.use(express.json());
+app.use(morgan("dev"));
 
 // allow cross-origin requests
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true
+}));
 
 // configure session middleware with Redis store
 app.use(session({
@@ -46,7 +51,7 @@ app.use("/api/auth", authRoutes);
 
 // book routes
 app.use("/api/books", bookRoutes);
-
+8
 // issue routes
 app.use("/api/issues", issueRoutes);
 

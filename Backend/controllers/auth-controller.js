@@ -196,7 +196,7 @@ exports.refreshAccessToken = async (req, res) => {
         // verify refreshToken signature
         let decoded;
         try {
-            decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+            decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
         } catch (err) {
             if (err.name === "TokenExpiredError") {
                 return res.status(401).json({
@@ -212,7 +212,7 @@ exports.refreshAccessToken = async (req, res) => {
         }
 
         // check if refreshToken is stored in Redis
-        const storedToken = getRefreshToken(decoded.id);
+        const storedToken = await getRefreshToken(decoded.id);
         if (!storedToken) {
             return res.status(400).json({
                 success: false,

@@ -15,6 +15,6 @@ router.post("/login", validate(loginSchema), loginUser);   // POST /api/auth/log
 router.post("/logout", verifyToken, logoutUser);    // POST /api/auth/logout (protected route, user must be authenticated to logout)
 
 // whenever user refresh or login after logout
-router.post("/refresh", verifyToken(refreshTokenSchema), refreshAccessToken);
+router.post("/refresh", validate(refreshTokenSchema), verifyToken, refreshAccessToken);
 
 module.exports = router;
