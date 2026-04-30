@@ -16,21 +16,37 @@ const issueSchema = new mongoose.Schema({
         default: Date.now
     },
     dueDate: {
-        type:     Date,       // issueDate + 14 days — never changes after issue
+        type:     Date,         // issueDate + 14 days — never changes after issue
         required: true
     },
     returnedAt: {
-        type:    Date,        // set when member actually returns — null until then
+        type:    Date,          // set when member actually returns — null until then
         default: null
     },
     returned: {
-        type:    Boolean, // true if book is returned, false if still issued
+        type:    Boolean,       // true if book is returned, false if still issued
         default: false
     },
-    fine: {
-        type:    Number,      // calculated on late return (daysOverdue * 5)
-        default: 0
+    bookSnapShot: {
+        title: {
+            type: String,
+            required: true
+        },
+        author: {
+            type: String,
+            required: true
+        }
+    },
+    status: {
+        type: String,
+        enum: ["issued", "returned", "overdue"],
+        default: "issued",
+        required: true,
+        index: true       // faster search by status
     }
 }, { timestamps: true });
+
+// index to quickly find overdue issues for cron job
+issueSchema.index({ dueDate: 1, status: 1 });
 
 module.exports = mongoose.model("Issue", issueSchema);

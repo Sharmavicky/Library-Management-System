@@ -26,10 +26,6 @@ const userSchema = new mongoose.Schema({
         default: "member",
         required: true
     },
-    fine: {
-        type: Number,
-        default: 0
-    },
     isActive: {
         type: Boolean,
         default: true,

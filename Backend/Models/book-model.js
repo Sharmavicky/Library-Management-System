@@ -5,7 +5,6 @@ const bookSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        index: true,        // faster search by title
     },
     author: {
         type: String,
@@ -37,5 +36,8 @@ const bookSchema = new mongoose.Schema({
         default: 5,
     },
 }, { timestamps: true });
+
+// index to quickly find books by title or author
+bookSchema.index({ title: "text", author: "text" });
 
 module.exports = mongoose.model("Book", bookSchema);
