@@ -1,6 +1,7 @@
 const express = require("express");
-const router = express.Router();
-const {  verifyToken, isAdmin } = require("../middleware/authMiddleWare");
+const router  = express.Router();
+const { verifyToken, isAdmin } = require("../middleware/authMiddleWare");
+const { getFinesByMember } = require("../../controllers/fine-controller");
 const {
     getMyProfile,
     getAllMembers,
@@ -10,15 +11,15 @@ const {
     deleteMember
 } = require("../../controllers/user-controller");
 
-router.patch("/:userId/block", verifyToken, isAdmin, blockMemberById);
-router.patch("/:userId/fine",  verifyToken, isAdmin, clearFine);
-router.delete("/:userId",      verifyToken, isAdmin, deleteMember);
-
-//static routes BEFORE param routes
-router.get("/profile", verifyToken, getMyProfile);
+// ── Static routes first
+router.get("/profile", verifyToken,          getMyProfile);   // FIX: /profile before /
 router.get("/",        verifyToken, isAdmin, getAllMembers);
 
-//param route last
-router.get("/:userId", verifyToken, isAdmin, getMemberById);
+// ── Param routes last 
+router.get("/:userId",             verifyToken, isAdmin, getMemberById);
+router.get("/:userId/fines",       verifyToken, isAdmin, getFinesByMember);
+router.patch("/:userId/block",     verifyToken, isAdmin, blockMemberById);
+router.patch("/:userId/fine",      verifyToken, isAdmin, clearFine);
+router.delete("/:userId",          verifyToken, isAdmin, deleteMember);
 
 module.exports = router;

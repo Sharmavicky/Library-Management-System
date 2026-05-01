@@ -1,20 +1,15 @@
 const express = require("express");
-const router = express.Router();
+const router  = express.Router();
 const { registerUser, loginUser, logoutUser, refreshAccessToken } = require("../../controllers/auth-controller");
 const { verifyToken } = require("../middleware/authMiddleWare");
 const validate = require("../middleware/validate");
 const { registerSchema, loginSchema, refreshTokenSchema } = require("../validators/authValidator");
 
-// Register new user
-router.post("/register", validate(registerSchema), registerUser);   // POST /api/auth/register
+router.post("/register", validate(registerSchema),      registerUser);
+router.post("/login",    validate(loginSchema),         loginUser);
+router.post("/logout",   verifyToken,                   logoutUser);
 
-// login new user
-router.post("/login", validate(loginSchema), loginUser);   // POST /api/auth/login
-
-// logout user
-router.post("/logout", verifyToken, logoutUser);    // POST /api/auth/logout (protected route, user must be authenticated to logout)
-
-// whenever user refresh or login after logout
-router.post("/refresh", validate(refreshTokenSchema), verifyToken, refreshAccessToken);
+// verifyToken — access token is expired at this point, the refresh token in req.body is the only credential needed
+router.post("/refresh",  validate(refreshTokenSchema),  refreshAccessToken);
 
 module.exports = router;
