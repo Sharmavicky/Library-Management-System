@@ -5,6 +5,7 @@ const updateBookSchema = z.object({
     author:     z.string().min(1).optional(),
     summary:    z.string().optional(),
     coverImage: z.string().url("Must be a valid URL").optional(),
+    totalCopies: z.number().int().positive().optional()
 }).strict();  // .strict() rejects any extra fields not in schema
 
 module.exports = { updateBookSchema };
