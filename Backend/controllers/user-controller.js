@@ -8,10 +8,17 @@ exports.getMyProfile = async (req, res) => {
         // req.user is attached with verifyToken middleware
         const member = await User.findById(req.user._id).select("-password"); // .select("-password") will prevent of returning password.
 
+        // attach live fine summary from Fine collection
+        const pendingFines = await Fine.aggregate([
+            { $match: { member: req.user._id, status: { $in: ["pending", "partial"] } } }, // match fines for the member with pending or partial status
+            { $group: { _id: null, totalOutStanding: { $sum: { $subtract: ["$totalAmount", "$paidAmount"] } } } } // calculate total outstanding by summing up (totalAmount - paidAmount) for all matched fines
+        ])
+
         return res.status(200).json({
             success: true,
             message: "Profile retreived sucessfully!!",
-            member
+            member,
+            outStandingFine: pendingFines[0]?.totalOutStanding ?? 0
         })
     } catch (err) {
         return res.status(500).json({
@@ -65,10 +72,17 @@ exports.getMemberById = async (req, res) => {
             })
         }
 
+        // attach outStanding fine summary from Fine collection
+        const pendingFines = await Fine.aggregate([
+            { $match: { member: member._id, status: { $in: ["pending", "partial"] } } }, // match fines for the member with pending or partial status
+            { $group: { _id: null, totalOutStanding: { $sum: { $subtract: ["$totalAmount", "$paidAmount"] } } } } // calculate total outstanding by summing up (totalAmount - paidAmount) for all matched fines
+        ])
+
         res.status(200).json({
             success: true,
             message: "Member found successfully!!",
-            member
+            member,
+            outStandingFine: pendingFines[0]?.totalOutStanding ?? 0
         });
     } catch (err) {
         res.status(500).json({
@@ -133,48 +147,62 @@ exports.blockMemberById = async (req, res) => {
 // clear fine of any member by ID (Protected route, accessible by admins only)
 exports.clearFine = async (req, res) => {
     try {
-       const { userId } = req.params;
-        // check if IDs are valid
-        if  (!mongoose.Types.ObjectId.isValid(userId)) {
+        const { userId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid ID!!"
-            })
+            });
         }
 
-        // check if member exists
         const member = await User.findById(userId);
         if (!member) {
             return res.status(404).json({
                 success: false,
                 message: "User not found!!"
-            })
+            });
         }
 
-        // check if user or member has outstanding balance to clear
-        if (member.fine === 0) {
+        const hasPendingFines = await Fine.exists({
+            member: userId,
+            status: { $in: ["pending", "partial"] }
+        });
+        if (!hasPendingFines) {
             return res.status(400).json({
                 success: false,
-                message: "User don't have any outstanding balance to clear!!"
-            })
+                message: "Member has no outstanding fines!!"
+            });
         }
 
-        const clearedAmount = member.fine; // to keep track how much we cleared amount
-        await User.findByIdAndUpdate(userId, {
-            fine: 0,        // clear fine
-            isActive: true  // unblock member after clearing fine
-        })
-       
+        // an aggregation pipeline in updateMany so "$totalAmount" is evaluated as a real field reference, not a plain string
+        const result = await Fine.updateMany(
+            { member: userId, status: { $in: ["pending", "partial"] } },
+            [{ 
+                $set: {
+                    status:     "paid",
+                    paidAmount: "$totalAmount",  // works correctly inside a pipeline []
+                    paidAt:     new Date()
+                }
+            }]
+        );
+
+        // only unblock if they were blocked
+        if (!member.isActive) {
+            await User.findByIdAndUpdate(userId, { isActive: true });
+        }
+
         return res.status(200).json({
             success: true,
-            message: `Fine of ₹${clearedAmount} cleared successfully!!`,
-        })
+            message: `All fines cleared!! ${result.modifiedCount} fine(s) marked as paid. ${!member.isActive ? "Member unblocked." : ""}`
+        });
+
     } catch (err) {
         return res.status(500).json({
             success: false,
             message: "Something went wrong!!",
             error: err.message
-        })
+        });
     }
 };
 
@@ -196,7 +224,7 @@ exports.deleteMember = async (req, res) => {
         if (!member) {
             return res.status(404).json({
                 success: false,
-                messge: "User not found!!"
+                message: "User not found!!"
             })
         }
 
@@ -209,7 +237,7 @@ exports.deleteMember = async (req, res) => {
         }
 
         // check if any book is issed to user 
-        const activeIssues = await Issue.find({
+        const activeIssues = await Issue.findOne({
             member: userId,
             returned: false,
         });
@@ -221,10 +249,14 @@ exports.deleteMember = async (req, res) => {
         }
 
         // check if member has an outstanding balance
-        if (member.fine > 0) {
+        const hasPendingFines = await Fine.exists({
+            member: userId,
+            status: { $in: ["pending", "partial"]}
+        })
+        if (hasPendingFines) {
             return res.status(400).json({
                 success: false,
-                message: `Cannot delete account. Member has outstanding balance of ${member.fine}.`
+                message: "Cannot delete account as member has outstanding fines. Please clear the fines before deleting the account."
             })
         }
 

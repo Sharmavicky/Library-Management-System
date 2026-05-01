@@ -25,7 +25,7 @@ exports.registerUser = async (req, res) => {
         const existingUser = await User.findOne({ email });
 
         if (existingUser) {
-            return res.status(404).json({
+            return res.status(409).json({
                 success: false,
                 message: "User already exists!!"
             })
@@ -87,21 +87,21 @@ exports.loginUser = async (req, res) => {
             })
         }
 
-        // validate if user exists
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found!!"
-            })
-        }
-
         // check password length
         if (password.length < 6 ) {
             return res.status(400).json({
                 success: false,
                 message: "Password must be at least 6 characters!!"
+            })
+        }
+
+        // validate if user exists
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(409).json({
+                success: false,
+                message: "User not found!!"
             })
         }
 

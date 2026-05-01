@@ -46,7 +46,7 @@ exports.getBookById = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            messsage: "Book retrieved successfully!!",
+            message: "Book retrieved successfully!!",
             book
         })
     } catch (err) {
@@ -139,7 +139,7 @@ exports.updateBook = async (req, res) => {
     } catch (err) {
         return res.status(500).json({
             success: false,
-            messsage: "Something went wrong!!",
+            message: "Something went wrong!!",
             error: err.message
         })
     }
@@ -163,13 +163,13 @@ exports.deleteBook = async (req, res) => {
 
         if (!book) {
             return res.status(404).json({
-                successs: false,
+                success: false,
                 message: "Book not found!!"
             })
         }
 
         // check if book is currently borrowed by any member if than the  book cannot be deleted
-        const activeIssue = await Issue.findOne({ book: bookId, returnDate: { $exists: false } });
+        const activeIssue = await Issue.findOne({ book: bookId, returned: { $exists: false } });
 
         if (activeIssue) {
             return res.status(400).json({

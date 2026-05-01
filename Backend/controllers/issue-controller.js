@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Issue = require("../Models/modelExporter").Issue;
 const Book = require("../Models/modelExporter").Book;
 const User = require("../Models/modelExporter").User;
+const Fine = require("../Models/modelExporter").Fine;
 
 const FINE_PER_DAY = 5; // fine amount per day for late returns
 const ISSUE_DAYS = 14; // number of days a book can be issued before it's considered late
@@ -11,7 +12,7 @@ exports.getAllIssuedBooks = async (req, res) => {
     try {
         const issuedBooks = await Issue.find()
             .populate("book", "title author coverImage availableCopies") // populatebook deails only tile, author, coverImage and copies
-            .populate("member", "username email fine"); // populate member details only username, email and fine
+            .populate("member", "username email"); // populate member details only username, email
 
         return res.status(200).json({
             success: true,
@@ -41,15 +42,6 @@ exports.issueBook = async (req, res) => {
             })
         }
 
-        // check if book exists
-        const book = await Book.findById(bookId);
-        if (!book) {
-            return res.status(404).json({
-                success: false,
-                message: "Book not found!!"
-            })
-        }
-
         // check if user exists
         const user = await User.findById(userId);
         if (!user) {
@@ -67,49 +59,69 @@ exports.issueBook = async (req, res) => {
             })
         }
 
-        // check if the book has available copies
-        if (book.availableCopies < 1) {
-            return res.status(400).json({
+        // check if user has unpaid/partial fines
+        const hasPendingFines = await Fine.exists({
+            member: userId,
+            status: { $in: ["pending", "partial"] }
+        });
+        if (hasPendingFines) {
+            return res.status(403).json({
                 success: false,
-                message: "Book is currently unavailable!!"
+                message: "Cannot issue book. User has unpaid fines!! Please clear fines to issue new books."
             })
         }
 
-        // check if user already has an active issue for the same book
-        const alreadyIssue = await Issue.findOne({
+        // check if book already issued to user
+        const alreadyIssued = await Issue.findOne({ book: bookId, member: userId, returned: false });
+        if (alreadyIssued) {
+            return res.status(400).json({
+                success: false,
+                message: "Book is already issued to this user!!"
+            })
+        }
+
+        // atomic operation to create issue record and decrement available copies of book by 1
+        const book = await Book.findByIdAndUpdate(
+            { _id: bookId, availableCopies: { $gt: 0 } }, // check if book has available copies before updating
+            { $inc: { availableCopies: -1 } }, // decrement available copies by 1
+            { new: true } // return the updated book document
+        )
+
+        // if book is null after update, it means there were no available copies
+        if (!book) {
+            const exists = await Book.exists({ _id: bookId });
+            if (!exists) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Book not found!!"
+                })
+            }
+
+            return res.status(400).json({
+                success: false,
+                message: "No available copies to issue!!"
+            })
+        }
+
+        // calculate due date by adding ISSUE_DAYS to current date
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + ISSUE_DAYS);
+
+        // create issue record with bookSnapShot to preserve book details at the time of issue
+        const issueRecord = await Issue.create({
             book: bookId,
             member: userId,
-            returned: false // active issue has no returnDate
+            dueDate,
+            bookSnapShot: {
+                title: book.title,
+                author: book.author
+            }
         })
 
-        if (alreadyIssue) {
-            return res.status(400).json({
-                success: false,
-                message: "Book already issued to this user!!"
-            })
-        }
-
-        // create a new issue record
-        const returnDate = new Date();
-        returnDate.setDate(returnDate.getDate() + ISSUE_DAYS); // set return date to ISSUE_DAYS from now
-
-        const [newIssue] = await Promise.all([
-            // create issue record
-            Issue.create({
-                book: bookId,
-                member: userId,
-                dueDate: returnDate
-            }),
-
-            // decrement available copies of the book by 1
-            Book.findByIdAndUpdate(bookId, { $inc: { availableCopies: -1} })
-        ])
-
-        return res.status(201).json({
+        return res.status(200).json({
             success: true,
-            message: `Book issued successfully. Due date by ${returnDate.toDateString()}!!`,
-            availableCopies: book.availableCopies - 1,
-            issue: newIssue
+            message: "Book issued successfully!!",
+            issueRecord
         })
         
     } catch (err) {
@@ -157,22 +169,42 @@ exports.returnBook = async (req, res) => {
         const daysOverdue = isLate ? Math.ceil((now - issueRecord.dueDate) / (1000 * 60 * 60 * 24)) : 0;
         const fine        = daysOverdue * FINE_PER_DAY;
 
-        // update issue record to mark as returned and set find and increment copies of the book
-        await Promise.all([
-            Issue.findByIdAndUpdate(issueId, { // update issue record
+        // prepare updates - mark issue as returned and increment book's available copies by 1
+        const update = [
+            Issue.findByIdAndUpdate(issueId, {
                 returned: true,
                 returnedAt: now,
-                fine: fine
+                status: "returned"   // update status to returned
             }),
-            Book.findByIdAndUpdate(issueRecord.book, { $inc: { availableCopies: 1 } }), // increment copies of book by 1
-            fine > 0 ? User.findByIdAndUpdate(issueRecord.member, { $inc: { fine } }) : null // update fine if there is any
-        ]);
+            Book.findByIdAndUpdate(issueRecord.book, {
+                $inc: { availableCopies: 1 } // increment available copies by 1
+            })
+        ]
 
-        return res.status(201).json({
+        // create Fine record only if there is a fine to be paid
+        if (isLate) {
+            update.push(
+                Fine.create({
+                    issue: issueId,
+                    member: issueRecord.member,
+                    daysOverDue,
+                    ratePerDay: FINE_PER_DAY,
+                    totalAmount: fine,
+                    paidAmount: 0,
+                    status: "pending",
+                    lastCalculatedAt: now
+                })
+            )
+        }
+
+        // execute all updates in parallel
+        await Promise.all(update);
+
+        return res.status(200).json({
             success: true,
-            message: `Book returned successfully!!${isLate
-                ? ` Late by ${daysOverdue} days. Fine: ${fine}`
-                : "Book returned on time. No fine."}`,
+            message: isLate
+                    ? `Book returned successfully!! Late by ${daysOverdue} day(s). Fine raised: ₹${fineAmount}`
+                    : "Book returned on time. No fine!!"
         })
     } catch (err) {
         return res.status(500).json({
@@ -187,7 +219,7 @@ exports.returnBook = async (req, res) => {
 exports.getMyIssuedBooks = async (req, res) => {
     try {
         const myIssuedBooks = await Issue.find({ member: req.user._id })
-            .populate("book", "title author coverImage avaiableCopies") // populate book details only title, author, coverImage and copies
+            .populate("book", "title author coverImage availableCopies") // populate book details only title, author, coverImage and copies
 
         // attch live status of book (issue is active or returned) based on returnDate
         const now = new Date();
@@ -264,8 +296,9 @@ exports.getReadAccess = async (req, res) => {
         }
 
         // return read url
-        const daysLeft = Math.ceil((issue.dueDate - now) / 1000 * 60 * 60 * 24);
-        res.status(200).json({
+        const daysLeft = Math.ceil((issue.dueDate - now) / (1000 * 60 * 60 * 24));
+
+        return res.status(200).json({
             success: true,
             message: "Read Access Granted!!",
             title: issue.book.title,
@@ -274,7 +307,7 @@ exports.getReadAccess = async (req, res) => {
             daysLeft
         });
     } catch (err) {
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: "Something went wrong!!",
             error: err.message
