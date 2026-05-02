@@ -10,6 +10,7 @@ const authRoutes = require("./src/routes/authRoutes");
 const bookRoutes = require("./src/routes/bookRoutes");
 const issueRoutes = require("./src/routes/issueRoute");
 const userRoutes = require("./src/routes/userRoutes");
+const fineRoutes = require("./src/routes/fineRoutes");
 const errorHandler = require("./src/middleware/errorHandler");
 
 const app = express();
@@ -51,12 +52,15 @@ app.use("/api/auth", authRoutes);
 
 // book routes
 app.use("/api/books", bookRoutes);
-8
+
 // issue routes
 app.use("/api/issues", issueRoutes);
 
 // user or member routes
 app.use("/api/users", userRoutes);
+
+// fines routes
+app.use("/api/fines", fineRoutes);
 
 // error Handler
 app.use(errorHandler);

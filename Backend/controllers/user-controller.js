@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const User = require("../Models/modelExporter").User;
 const Issue = require("../Models/modelExporter").Issue;
+const Fine = require("../Models/modelExporter").Fine;
 
 // Get my profile (Protected route accessible by members only)
 exports.getMyProfile = async (req, res) => {
