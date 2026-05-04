@@ -1,38 +1,83 @@
 const mongoose = require("mongoose");
 const Fine = require("../Models/modelExporter").Fine;
 const User = require("../Models/modelExporter").User;
+const Issue = require("../Models/modelExporter").Issue;
+const runOverDueJob = require("../src/jobs/OverDueJob").runOverDueJob
+const paginate = require("../utils/paginate");
 
-// Get all fines (Admin only)
-exports.getAllFines = async (req, res) => {
+/*
+    Get all fines (Admin only)
+    GET /api/fines?page=1&limit=10&status=pending&userId=123&bookId=456
+*/
+exports.getAllFines = async (req, res, next) => {
     try {
-        const { status } = req.query;   // optional query param to filter by status
-        const query = status ? { status } : {}; // if status is provided, filter by it, otherwise get all fines
+        const { status, userId, bookId } = req.query;   // optional query param to filter by status
+        const query = {}; // if status is provided, filter by it, otherwise get all fines
 
-        const fines = await Fine.find(query)
-                    .populate("member", "username email")
-                    .populate({                 // populate issue details and book snapshot
-                        path: "issue",
-                        populate: { path: "book", select: "title author" }
-                    })
-                    .sort({ createdAt: -1 }); // sort by most recent
+        if (status) {
+            const validStatus = ["pending", "paid", "waived", "partial"];
+            if (!validStatus.includes(status)) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Invalid status filter!! Valid values are ${validStatus.join(", ")}`
+                })
+            }
+
+            query.status = status; // add status filter to query
+        }
+
+        // check both user and book IDs are valid
+        if (userId && !mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid User ID filter!!"
+            })
+
+            query.member = userId; // add member filter to query
+        }
+
+        if (bookId && !mongoose.Types.ObjectId.isValid(bookId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Book ID filter!!"
+            })
+
+            const issues = await Issue.find({ book: bookId }).select("_id");
+            query.issue = { $in: issues.map(issue => issue._id) }; // add issue filter to query to get fines related to the book
+        }
+
+        const { data: fines, pagination } = await paginate(
+            Fine,
+            query,
+            req.query,
+            [
+                { path: "member", select: "username email" }, // populate member details
+                { path: "issue", populate: { path: "book", select: "title author" } } // populate book details through issue
+            ]
+        )
+
+        // calculate total pending balance for the filtered fines
+        const totalOutstanding = fines
+                    .filter(fine => ["pending", "partial"].includes(fine.status)) // only consider pending and partial fines for total pending calculation
+                    .reduce((sum, fine) => sum + fine.amount, 0); // sum up the amounts of pending and partial fines
         
         return res.status(200).json({
             success: true,
             message: "Fines retrieved successfully!!",
-            count: fines.length,
+            pagination,
+            totalOutstanding,
             fines
         })
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong!!",
-            error: err.message
-        })
+        next(err);
     }
 }
 
-// Get fines for a specific member (Admin only)
-exports.getFinesByMember = async (req, res) => {
+/*
+    Get fines for a specific member (Admin only)
+    GET /api/fines/member/:memberId
+*/
+exports.getFinesByMember = async (req, res, next) => {
     try {
         const { memberId } = req.params;
 
@@ -44,13 +89,34 @@ exports.getFinesByMember = async (req, res) => {
             })
         }}
 
-        // find fines for the member, populate issue details, sort by most recent
-        const fines = await Fine.find({ member: memberId })
-                    .populate({
-                        path: "issue",
-                        populate: { path: "book", select: "title author" }
-                    })
-                    .sort({ createdAt: -1 });
+        // check if member exists and is active
+        const member = await User.findById(memberId).select("username email isActive");
+        if (!member) {
+            return res.status(400).json({
+                success: false,
+                message: "Member not found!!"
+            })
+        }
+
+        if (!member.isActive) {
+            return res.status(404).json({
+                success: false,
+                message: "Member account is deactivated!! No fines available for deactivated members."
+            })
+        }
+
+        const { data: fines, pagination } = await paginate(
+            Fine,
+            { member: memberId },
+            req.query,
+            [{
+                path: "issue",
+                populate: {
+                    path: "book",
+                    select: "title author coverImage"
+                }
+            }]
+        )
 
         // calculate total outStanding balance for the member
         const totalPending = fines
@@ -60,22 +126,22 @@ exports.getFinesByMember = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Fines retrieved successfully!!",
-            count: fines.length,
+            pagination,
+            member,
             totalPending,
             fines
         })
 
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong!!",
-            error: err.message
-        })
+        next(err);
     }
 }
 
-// Pay fine supports both full and partial payment (Admin only)
-exports.payFine = async (req, res) => {
+/*
+    Pay fine supports both full and partial payment (Admin only)
+    POST /api/fines/:fineId/pay
+*/
+exports.payFine = async (req, res, next) => {
     try {
         const { fineId } = req.params;
         const { amount } = req.body;
@@ -151,16 +217,12 @@ exports.payFine = async (req, res) => {
             fine: updateFine
         })
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong!!",
-            error: err.message
-        })
+        next(err);
     }
 }
 
 // Waive off fine (Admin only)
-exports.waiveFine = async (req, res) => {
+exports.waiveFine = async (req, res, next) => {
     try {
         const { fineId } = req.params;
         const { reason } = req.body;
@@ -219,10 +281,20 @@ exports.waiveFine = async (req, res) => {
             fine: updateFine
         })
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong!!",
-            error: err.message
+        next(err);
+    }
+}
+
+// Cron job to calculate fines for overdue issues, just for testing purpose, in production this should run as a scheduled job at regular intervals (e.g. daily)
+exports.runFineCronJob = async (req, res, next) => {
+    try {
+        await runOverDueJob();
+
+        return res.status(200).json({
+            success: true,
+            message: "Fine cron job executed successfully!! Check server logs for details."
         })
+    } catch (err) {
+        next(err);
     }
 }

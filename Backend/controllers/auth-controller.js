@@ -9,7 +9,7 @@ const {
 } = require("../utils/tokenCache");
 
 // Register new user
-exports.registerUser = async (req, res) => {
+exports.registerUser = async (req, res, next) => {
     try {
         const { username, email, password } = req.body;
 
@@ -66,16 +66,12 @@ exports.registerUser = async (req, res) => {
             }
         })
     } catch(err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong!!",
-            error: err.message
-        })
+        next(err);
     }
 }
 
 // Login existing user
-exports.loginUser = async (req, res) => {
+exports.loginUser = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
@@ -142,11 +138,7 @@ exports.loginUser = async (req, res) => {
             }
         })
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong!!",
-            error: err.message
-        })
+        next(err);
     }
 }
 
@@ -173,10 +165,7 @@ exports.logoutUser = async (req, res) => {
         });
 
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong!!", error: err.message
-        });
+        next(err);
     }
 };
 
@@ -268,10 +257,6 @@ exports.refreshAccessToken = async (req, res) => {
             refreshToken: newRefreshToken
         })
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong",
-            error: err.message
-        })
+        next(err);
     }
 }

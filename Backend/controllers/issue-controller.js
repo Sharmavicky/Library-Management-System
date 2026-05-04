@@ -3,34 +3,38 @@ const Issue = require("../Models/modelExporter").Issue;
 const Book = require("../Models/modelExporter").Book;
 const User = require("../Models/modelExporter").User;
 const Fine = require("../Models/modelExporter").Fine;
+const paginate = require("../utils/paginate");
 
 const FINE_PER_DAY = 5; // fine amount per day for late returns
 const ISSUE_DAYS = 14; // number of days a book can be issued before it's considered late
 
 // Get all issued books (Protected route, accessible admins)
-exports.getAllIssuedBooks = async (req, res) => {
+exports.getAllIssuedBooks = async (req, res, next) => {
     try {
-        const issuedBooks = await Issue.find()
-            .populate("book", "title author coverImage availableCopies") // populatebook deails only tile, author, coverImage and copies
-            .populate("member", "username email"); // populate member details only username, email
+        const { data: issuedBooks, pagination } = await paginate(
+            Issue,
+            {}, // no filter, get all issued books
+            req.query,
+            [
+                { path: "book", select: "title author coverImage availableCopies" }, // populate book details
+                { path: "member", select: "username email" } // populate member details
+            ],
+            { createdAt: -1 }
+        )
 
         return res.status(200).json({
             success: true,
             message: "Issued books retrieved successfully!!",
-            count: issuedBooks.length,
+            pagination,
             issuedBooks
         })
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong!!",
-            error: err.message
-        })
+        next(err);
     }
 }
 
 // Issue a book to a member (Protected route, accessible by admin only)
-exports.issueBook = async (req, res) => {
+exports.issueBook = async (req, res, next) => {
     try {
         const { bookId, userId } = req.body;
 
@@ -125,16 +129,12 @@ exports.issueBook = async (req, res) => {
         })
         
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong!!",
-            error: err.message
-        })
+        next(err);
     }
 }
 
 // Return a book (Protected route, accessible by admin only)
-exports.returnBook = async (req, res) => {
+exports.returnBook = async (req, res, next) => {
     try {
         const { issueId } = req.params;
 
@@ -207,19 +207,21 @@ exports.returnBook = async (req, res) => {
                     : "Book returned on time. No fine!!"
         })
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong!!",
-            error: err.message
-        })
+        next(err);
     }
 }
 
 // Get all my issued books (Protected route, accessible by members only)
-exports.getMyIssuedBooks = async (req, res) => {
+exports.getMyIssuedBooks = async (req, res, next) => {
     try {
-        const myIssuedBooks = await Issue.find({ member: req.user._id })
-            .populate("book", "title author coverImage availableCopies") // populate book details only title, author, coverImage and copies
+        const { data: myIssuedBooks, pagination } = await paginate(
+            Issue,
+            { member: req.user._id }, // filter issues for the logged in user
+            req.query,
+            [
+                { path: "book", select: "title author coverImage" } // populate book details
+            ]
+        )
 
         // attch live status of book (issue is active or returned) based on returnDate
         const now = new Date();
@@ -232,20 +234,16 @@ exports.getMyIssuedBooks = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Your issued books retrieved successfully!!",
-            count: myIssuedBooksWithStatus.length,
+            pagination,
             books: myIssuedBooksWithStatus
         })
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong!!",
-            error: err.message
-        })
+        next(err);
     }
 }
 
 // Get Read Access (Protected route, accessible by member only)
-exports.getReadAccess = async (req, res) => {
+exports.getReadAccess = async (req, res, next) => {
     try {
         const { issueId } = req.params;
 
@@ -307,10 +305,6 @@ exports.getReadAccess = async (req, res) => {
             daysLeft
         });
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong!!",
-            error: err.message
-        });
+        next(err);
     }
 };

@@ -4,7 +4,7 @@ const Issue = require("../Models/modelExporter").Issue;
 const Fine = require("../Models/modelExporter").Fine;
 
 // Get my profile (Protected route accessible by members only)
-exports.getMyProfile = async (req, res) => {
+exports.getMyProfile = async (req, res, next) => {
     try {
         // req.user is attached with verifyToken middleware
         const member = await User.findById(req.user._id).select("-password"); // .select("-password") will prevent of returning password.
@@ -22,37 +22,41 @@ exports.getMyProfile = async (req, res) => {
             outStandingFine: pendingFines[0]?.totalOutStanding ?? 0
         })
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong!!",
-            error: err.message
-        })
+        next(err);
     }
 }
 
 // Get all members or user (Protected route accessible by admins only)
-exports.getAllMembers = async (req, res) => {
+exports.getAllMembers = async (req, res, next) => {
     try {
-        // need to fetch only members not admmin and without password
-        const members = await User.find({ role: "member" }).select("-password");
+        const { data: members, pagination } = await paginate(
+            User,
+            { role: "member" }, // filter only members, exclude admins
+            req.query,
+            [],
+            { createdAt: -1 } // sort by newest registered members first
+        );
+
+        // strip password from each member object before sending response
+        const safeMembers = members.map(member => {
+            const obj = member.toObject();
+            delete obj.password;
+            return obj;
+        })
 
         res.status(200).json({
             success: true,
             message: "All Members retreived successfully!!",
-            count: members.length,
-            members
+            pagination,
+            members: safeMembers
         });
     } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: "Something went wrong!!",
-            error: err.message
-        });
+        next(err);
     }
 };
 
 // Get a member by ID (Protected route, accessible by admins only)
-exports.getMemberById = async (req, res) => {
+exports.getMemberById = async (req, res, next) => {
     try {
         const { userId } = req.params;
 
@@ -86,16 +90,12 @@ exports.getMemberById = async (req, res) => {
             outStandingFine: pendingFines[0]?.totalOutStanding ?? 0
         });
     } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: 'Something went wrong!!',
-            error: err.message
-        });
+        next(err);
     }
 };
 
 // Block or Unblock member by ID (Protected route, accessible by admins only)
-exports.blockMemberById = async (req, res) => {
+exports.blockMemberById = async (req, res, next) => {
     try {
         const { userId } = req.params;
 
@@ -137,16 +137,12 @@ exports.blockMemberById = async (req, res) => {
             member: updateMember
         })
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong!!",
-            error: err.message
-        })
+        next(err);
     }
 }
 
 // clear fine of any member by ID (Protected route, accessible by admins only)
-exports.clearFine = async (req, res) => {
+exports.clearFine = async (req, res, next) => {
     try {
         const { userId } = req.params;
 
@@ -199,16 +195,12 @@ exports.clearFine = async (req, res) => {
         });
 
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong!!",
-            error: err.message
-        });
+        next(err);
     }
 };
 
 // delete a member (protected route, accessible by admins only)
-exports.deleteMember = async (req, res) => {
+exports.deleteMember = async (req, res, next) => {
     try {
         const { userId } = req.params;
 
@@ -269,10 +261,6 @@ exports.deleteMember = async (req, res) => {
             message: "Member deleted successfully!!"
         })
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong!!",
-            error: err.message
-        })
+        next(err);
     }
 }
