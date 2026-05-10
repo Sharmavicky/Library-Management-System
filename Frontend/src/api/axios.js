@@ -4,7 +4,7 @@ const API = axios.create({
     baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api"  
 });
 
-// attack token to every request automatically
+// attach token to every request automatically
 API.interceptors.request.use((config) => {
     const token = localStorage.getItem("accessToken");
     if (token) {
@@ -45,7 +45,7 @@ API.interceptors.response.use(
 
                 // retry original request with new token
                 original.headers.Authorization = `Bearer ${data.accessToken}`;
-                return axios(original);
+                return API(original);
             } catch  {
                 // refresh failed, redirect user to login page
                 localStorage.clear();

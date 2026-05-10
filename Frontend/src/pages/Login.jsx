@@ -2,8 +2,11 @@ import { useState } from "react";
 import LibrarySidebar from "../Components/LibrarySidebar";
 import { loginUser } from "../services/authService";
 import { useNavigate } from "react-router-dom";
+import useAuthStore  from "../store/authStore";
 
 export default function LoginPage({ onNavigateRegister }) {
+    const { login } = useAuthStore();
+    
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -20,16 +23,12 @@ export default function LoginPage({ onNavigateRegister }) {
             const data = await loginUser(email, password);
 
             // save token to localStorage
-            localStorage.setItem("accessToken", data.accessToken);
-            localStorage.setItem("refreshToken", data.refreshToken);
-            localStorage.setItem("user", JSON.stringify(data.user));
+            login(data);
 
             // redirect based on role
-            if (data.user.role === "admin") {
-                navigate("/admin/dashboard"); // admin dashboard
-            } else {
-                navigate("/dashboard"); // member dashboard
-            }
+            if (data.user.role === "admin") navigate("/admin/dashboard"); // admin dashboard
+            else navigate("/dashboard"); // member dashboard
+            
         } catch (err) {
             // show error message from backend
             setError(err.response?.data?.message || "Login failed!! Please try again");

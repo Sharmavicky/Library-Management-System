@@ -2,8 +2,11 @@ import { useState } from "react";
 import LibrarySidebar from "../Components/LibrarySidebar";
 import { useNavigate } from "react-router-dom";
 import { registerUser } from "../services/authService";
+import useAuthStore from "../store/authStore";
 
 export default function RegisterPage() {
+    const { login } = useAuthStore();
+
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -35,9 +38,7 @@ export default function RegisterPage() {
             const data = await registerUser(username, email, password);
 
             // save token to localStorage and redirect after success
-            localStorage.setItem("accessToken", data.accessToken);
-            localStorage.setItem("refreshToken", data.refreshToken);
-            localStorage.setItem("user", JSON.stringify(data.user));
+            login(data);
 
             // navigate new member to dashboard
             navigate("/dashboard");
