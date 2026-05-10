@@ -8,8 +8,8 @@ export  function ProtectedRoute({ children }) {
 }
 
 // protect admin-route only
-export function AdminRoute({ children, user }) {
-    const { isAuthenticated } = useAuthStore();
+export function AdminRoute({ children }) {
+    const { isAuthenticated, user } = useAuthStore();
     if (!isAuthenticated) return <Navigate to="/login" replace />
     if (user?.role !== "admin") return <Navigate to="/login" replace />
     return children;
