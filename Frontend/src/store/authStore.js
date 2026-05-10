@@ -7,7 +7,7 @@ const useAuthStore = create((set) => ({
 
     login: (data) => {
         localStorage.setItem("accessToken", data.accessToken);
-        localStorage.setItem("refreshToken", data.refershToken);
+        localStorage.setItem("refreshToken", data.refreshToken);
         localStorage.setItem("user", JSON.stringify(data.user));
         set({
             user: data.user,
