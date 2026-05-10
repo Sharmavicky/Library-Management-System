@@ -26,7 +26,7 @@ app.use(helmet());
 app.use((req, res, next) => {
     req.body   = mongoSanitize.sanitize(req.body);
     req.params = mongoSanitize.sanitize(req.params);
-    next(); // FIX: you were missing next() — requests were hanging forever
+    next();
 });
 
 // ── Body parser ───────────────────────────────────────────────────────────────

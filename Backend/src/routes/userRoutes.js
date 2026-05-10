@@ -12,7 +12,7 @@ const {
 } = require("../../controllers/user-controller");
 
 // ── Static routes first
-router.get("/profile", verifyToken,          getMyProfile);   // FIX: /profile before /
+router.get("/profile", verifyToken,          getMyProfile);
 router.get("/",        verifyToken, isAdmin, getAllMembers);
 
 // ── Param routes last 

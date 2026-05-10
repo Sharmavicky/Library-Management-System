@@ -11,8 +11,6 @@ router.get("/",              verifyToken, isAdmin, getAllIssuedBooks);
 router.post("/",             verifyToken, isAdmin, validate(issueBookSchema), issueBook);
 router.get("/my",            verifyToken, isMember, getMyIssuedBooks);  //moved above param routes
 router.get("/read/:issueId", verifyToken, isMember, getReadAccess);
-
-// :issuedId → :issueId to match req.params.issueId in the controller
 router.patch("/:issueId/return", verifyToken, isAdmin, returnBook);
 
 module.exports = router;
