@@ -9,7 +9,8 @@ import {
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 import { getSummary, returnBook } from "../../services/adminServices";
-import useAuthStore from "../../store/authStore";
+// import useAuthStore from "../../store/authStore";
+import NavBar from "../../Components/NavBar";
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip);
 
@@ -144,7 +145,7 @@ const chartOptions = {
 export default function AdminDashboard() {
     const navigate     = useNavigate();
     const queryClient  = useQueryClient();
-    const { user, logout } = useAuthStore();
+    // const { user, logout } = useAuthStore();
  
     // ── Fetch summary from GET /api/reports/summary ───────────────────────────
     const {
@@ -193,10 +194,10 @@ export default function AdminDashboard() {
     };
  
     // ── Logout handler ────────────────────────────────────────────────────────
-    const handleLogout = () => {
-        logout();
-        navigate("/login", { replace: true }); // cannot back to see logged account, need to login again
-    };
+    // const handleLogout = () => {
+    //     logout();
+    //     navigate("/login", { replace: true }); // cannot back to see logged account, need to login again
+    // };
  
     // ── Error state ───────────────────────────────────────────────────────────
     if (isError) {
@@ -220,53 +221,8 @@ export default function AdminDashboard() {
         <div className="min-h-screen bg-gray-50 font-sans">
     
             {/* ── Top nav bar ── */}
-            <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
-                <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold text-indigo-600">LibraryOS</span>
-                    <span className="text-gray-300">|</span>
-                    <span className="text-sm text-gray-500">Admin dashboard</span>
-                </div>
-                <div className="flex items-center gap-4">
-                    {/* Quick action buttons */}
-                    <button
-                        onClick={() => navigate("/admin/books")}
-                        className="text-sm text-gray-600 hover:text-indigo-600 transition font-medium cursor-pointer"
-                    >
-                        Books
-                    </button>
-                    <button
-                        onClick={() => navigate("/admin/users")}
-                        className="text-sm text-gray-600 hover:text-indigo-600 transition font-medium cursor-pointer"
-                    >
-                        Users
-                    </button>
-                    <button
-                        onClick={() => navigate("/admin/issuances")}
-                        className="text-sm text-gray-600 hover:text-indigo-600 transition font-medium cursor-pointer"
-                    >
-                        Issuances
-                    </button>
-                    <button
-                        onClick={() => navigate("/admin/fines")}
-                        className="text-sm text-gray-600 hover:text-indigo-600 transition font-medium cursor-pointer"
-                    >
-                        Fines
-                    </button>
-                    <div className="w-px h-4 bg-gray-200" />
-                    <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 text-[11px] font-bold flex items-center justify-center">
-                            {getInitials(user?.username || "Admin")}
-                        </div>
-                        <span className="text-sm font-medium text-gray-700">{user?.username || "Admin"}</span>
-                    </div>
-                    <button
-                        onClick={handleLogout}
-                        className="text-sm text-gray-400 hover:text-red-500 transition cursor-pointer font-medium"
-                    >
-                        Sign out
-                    </button>
-                </div>
-            </nav>
+            <NavBar />
+            
         
             <div className="p-5 flex flex-col gap-4 max-w-350 mx-auto">
         
