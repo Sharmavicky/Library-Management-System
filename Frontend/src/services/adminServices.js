@@ -4,6 +4,7 @@ import API from "../api/axios";
 export const getSummary         = ()                     => API.get("/reports/summary").then(r => r.data);
 
 // books
+export const addBooks           = (data)                 => API.post("/books", data).then(r => r.data);
 export const getAllBooks        = (page = 1, limit = 10) => API.get(`/books?page=${page}&limit=${limit}`).then(r => r.data);
 export const searchBooks        = (query, page = 1)      => API.get(`/books/search?query=${query}&page=${page}`).then(r => r.data);
 export const updateBook         = (bookId, data)         => API.put(`/books/${bookId}`, data).then(r => r.data);
