@@ -11,9 +11,18 @@ const ISSUE_DAYS = 14; // number of days a book can be issued before it's consid
 // Get all issued books (Protected route, accessible admins)
 exports.getAllIssuedBooks = async (req, res, next) => {
     try {
+        const { status } = req.query;
+
+        // build filter based on status query param
+        const filter = {};
+        if (status === "returned" || status === "issued" || status === "overdue") {
+            filter.status = status;
+        }
+        // if no status or "all", filter stays {} to return everything
+
         const { data: issuedBooks, pagination } = await paginate(
             Issue,
-            {}, // no filter, get all issued books
+            filter,
             req.query,
             [
                 { path: "book", select: "title author coverImage availableCopies" }, // populate book details
@@ -187,7 +196,7 @@ exports.returnBook = async (req, res, next) => {
                 Fine.create({
                     issue: issueId,
                     member: issueRecord.member,
-                    daysOverDue,
+                    daysOverdue,
                     ratePerDay: FINE_PER_DAY,
                     totalAmount: fine,
                     paidAmount: 0,
@@ -203,7 +212,7 @@ exports.returnBook = async (req, res, next) => {
         return res.status(200).json({
             success: true,
             message: isLate
-                    ? `Book returned successfully!! Late by ${daysOverdue} day(s). Fine raised: ₹${fineAmount}`
+                    ? `Book returned successfully!! Late by ${daysOverdue} day(s). Fine raised: ₹${fine}`
                     : "Book returned on time. No fine!!"
         })
     } catch (err) {

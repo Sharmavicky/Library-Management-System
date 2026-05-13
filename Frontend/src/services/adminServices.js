@@ -18,7 +18,7 @@ export const clearMemberFine    = (userId)               => API.patch(`/users/${
 export const deleteMember       = (userId)               => API.delete(`/users/${userId}`).then(r => r.data);
 
 // issuances
-export const getAllIssuances     = (page = 1)            => API.get(`/issues?page=${page}`).then(r => r.data);
+export const getAllIssuances     = (page = 1, status)    => API.get(`/issues?page=${page}${status ? `&status=${status}` : ""}`).then(r => r.data);
 export const getOverdueIssuances = ()                    => API.get("/issues?status=overdue").then(r => r.data);
 export const issueBook           = (bookId, userId)      => API.post("/issues", { bookId, userId }).then(r => r.data);
 export const returnBook          = (issueId)             => API.patch(`/issues/${issueId}/return`).then(r => r.data);
