@@ -77,7 +77,7 @@ function BookModal({ book, onClose, onSave, isSaving }) {
                     </h2>
                     <button
                         onClick={onClose}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 transition"
+                        className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 cursor-pointer hover:bg-gray-50 transition"
                     >
                         ✕
                     </button>
@@ -118,13 +118,13 @@ function BookModal({ book, onClose, onSave, isSaving }) {
 
                     {/* Footer */}
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 cursor-pointer hover:bg-gray-50 transition">
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isSaving}
-                            className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50"
+                            className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg font-semibold cursor-pointer hover:bg-indigo-700 transition disabled:opacity-50"
                         >
                             {isSaving ? "Saving..." : isEdit ? "Save changes" : "Add book"}
                         </button>
@@ -148,13 +148,13 @@ function DeleteModal({ book, onClose, onConfirm, isDeleting }) {
                     This cannot be undone. The book will be permanently removed from the catalog.
                 </p>
                 <div className="flex gap-2 justify-center">
-                    <button onClick={onClose} className="px-4 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition">
+                    <button onClick={onClose} className="px-4 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 cursor-pointer hover:bg-gray-50 transition">
                         Cancel
                     </button>
                     <button
                         onClick={onConfirm}
                         disabled={isDeleting}
-                        className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50"
+                        className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg font-semibold cursor-pointer hover:bg-red-700 transition disabled:opacity-50"
                     >
                         {isDeleting ? "Deleting..." : "Yes, delete"}
                     </button>
@@ -257,7 +257,7 @@ export default function AdminBooks() {
                 </div>
             )}
 
-            <div className="p-5 max-w-[1400px] mx-auto flex flex-col gap-4">
+            <div className="p-5 max-w-350 mx-auto flex flex-col gap-4">
 
                 {/* Page header */}
                 <div className="flex items-center justify-between">
@@ -269,7 +269,7 @@ export default function AdminBooks() {
                     </div>
                     <button
                         onClick={() => setModalBook({})}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition"
+                        className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold cursor-pointer hover:bg-indigo-700 transition"
                     >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         Add book
@@ -287,14 +287,14 @@ export default function AdminBooks() {
                             className="text-sm outline-none text-gray-700 flex-1 bg-transparent"
                         />
                     </div>
-                    <button type="submit" className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition">
+                    <button type="submit" className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg cursor-pointer hover:bg-indigo-700 transition">
                         Search
                     </button>
                     {searchQuery && (
                         <button
                             type="button"
                             onClick={() => { setSearchQuery(""); setSearchInput(""); setPage(1); }}
-                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-500 hover:bg-gray-50 transition"
+                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-500 cursor-pointer hover:bg-gray-50 transition"
                         >
                             Clear
                         </button>
@@ -327,7 +327,7 @@ export default function AdminBooks() {
                                 : books.map((book) => (
                                     <tr key={book._id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition">
                                         <td className="py-3 px-3">
-                                            <div className="font-medium text-gray-900 truncate max-w-[180px]">{book.title}</div>
+                                            <div className="font-medium text-gray-900 truncate max-w-45">{book.title}</div>
                                             {book.isbn && <div className="text-[11px] text-gray-400 font-mono mt-0.5">{book.isbn}</div>}
                                         </td>
                                         <td className="py-3 px-3 text-gray-600">{book.author}</td>
@@ -348,13 +348,13 @@ export default function AdminBooks() {
                                             <div className="flex items-center gap-2">
                                                 <button
                                                     onClick={() => setModalBook(book)}
-                                                    className="text-[11px] px-2.5 py-1 border border-gray-200 rounded-md text-gray-600 hover:border-indigo-400 hover:text-indigo-600 transition"
+                                                    className="text-[11px] px-2.5 py-1 border border-gray-200 rounded-md text-gray-600 hover:border-indigo-400 cursor-pointer hover:text-indigo-600 transition"
                                                 >
                                                     Edit
                                                 </button>
                                                 <button
                                                     onClick={() => setDeleteBook_(book)}
-                                                    className="text-[11px] px-2.5 py-1 border border-gray-200 rounded-md text-gray-600 hover:border-red-300 hover:text-red-600 transition"
+                                                    className="text-[11px] px-2.5 py-1 border border-gray-200 rounded-md text-gray-600 hover:border-red-300 cursor-pointer hover:text-red-600 transition"
                                                 >
                                                     Delete
                                                 </button>
@@ -376,7 +376,7 @@ export default function AdminBooks() {
                                 <button
                                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                                     disabled={!pagination.hasPrev}
-                                    className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50 transition disabled:opacity-40"
+                                    className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 cursor-pointer hover:bg-gray-50 transition disabled:opacity-40"
                                 >
                                     ← Prev
                                 </button>
@@ -386,7 +386,7 @@ export default function AdminBooks() {
                                         <button
                                             key={p}
                                             onClick={() => setPage(p)}
-                                            className={`px-3 py-1.5 text-xs border rounded-md transition ${
+                                            className={`px-3 py-1.5 text-xs border rounded-md transition cursor-pointer ${
                                                 p === pagination.page
                                                     ? "bg-indigo-600 text-white border-indigo-600"
                                                     : "border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -399,7 +399,7 @@ export default function AdminBooks() {
                                 <button
                                     onClick={() => setPage((p) => p + 1)}
                                     disabled={!pagination.hasNext}
-                                    className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50 transition disabled:opacity-40"
+                                    className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 cursor-pointer hover:bg-gray-50 transition disabled:opacity-40"
                                 >
                                     Next →
                                 </button>

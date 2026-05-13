@@ -40,7 +40,7 @@ export default function NavBar() {
                     onClick={() => navigate("/admin/users")}
                     className="text-sm text-gray-600 hover:text-indigo-600 transition font-medium cursor-pointer"
                 >
-                    Users
+                    Members
                 </button>
                 <button
                     onClick={() => navigate("/admin/issuances")}

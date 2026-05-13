@@ -67,7 +67,12 @@ function UserDetailPanel({ userId, onClose }) {
             {/* Panel header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                 <span className="text-sm font-semibold text-gray-900">Member profile</span>
-                <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
+                <button
+                    onClick={onClose}
+                    className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
+                >
+                    ✕
+                </button>
             </div>
 
             <div className="p-5 flex flex-col gap-4 flex-1 overflow-y-auto">
@@ -130,13 +135,13 @@ function ConfirmModal({ title, message, confirmLabel, confirmClass, onClose, onC
                 <h3 className="text-base font-semibold text-gray-900 mb-2">{title}</h3>
                 <p className="text-sm text-gray-500 mb-5">{message}</p>
                 <div className="flex gap-2 justify-center">
-                    <button onClick={onClose} className="px-4 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition">
+                    <button onClick={onClose} className="px-4 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 cursor-pointer hover:bg-gray-50 transition">
                         Cancel
                     </button>
                     <button
                         onClick={onConfirm}
                         disabled={isLoading}
-                        className={`px-4 py-2 text-sm text-white rounded-lg font-semibold transition disabled:opacity-50 ${confirmClass}`}
+                        className={`px-4 py-2 text-sm text-white rounded-lg font-semibold cursor-pointer transition disabled:opacity-50 ${confirmClass}`}
                     >
                         {isLoading ? "Please wait..." : confirmLabel}
                     </button>
@@ -283,14 +288,14 @@ export default function AdminUsers() {
                                                             <div className={`w-7 h-7 rounded-full ${avatar.bg} ${avatar.text} flex items-center justify-center text-[11px] font-bold shrink-0`}>
                                                                 {getInitials(member.username)}
                                                             </div>
-                                                            <span className="font-medium text-gray-900 truncate max-w-[120px]">
+                                                            <span className="font-medium text-gray-900 truncate max-w-30">
                                                                 {member.username}
                                                             </span>
                                                         </div>
                                                     </td>
 
                                                     {/* Email */}
-                                                    <td className="py-3 px-3 text-gray-500 truncate max-w-[160px]">
+                                                    <td className="py-3 px-3 text-gray-500 truncate max-w-40">
                                                         {member.email}
                                                     </td>
 
@@ -331,7 +336,7 @@ export default function AdminUsers() {
                                                                     name:    member.username,
                                                                     active:  member.isActive,
                                                                 })}
-                                                                className={`text-[11px] px-2.5 py-1 border rounded-md transition ${
+                                                                className={`text-[11px] px-2.5 py-1 border rounded-md transition cursor-pointer ${
                                                                     member.isActive
                                                                         ? "border-gray-200 text-gray-600 hover:border-amber-300 hover:text-amber-600"
                                                                         : "border-gray-200 text-gray-600 hover:border-green-300 hover:text-green-600"
@@ -347,7 +352,7 @@ export default function AdminUsers() {
                                                                     userId: member._id,
                                                                     name:   member.username,
                                                                 })}
-                                                                className="text-[11px] px-2.5 py-1 border border-gray-200 rounded-md text-gray-600 hover:border-blue-300 hover:text-blue-600 transition"
+                                                                className="text-[11px] px-2.5 py-1 border border-gray-200 rounded-md text-gray-600 cursor-pointer hover:border-blue-300 hover:text-blue-600 transition"
                                                             >
                                                                 Clear fine
                                                             </button>
@@ -359,7 +364,7 @@ export default function AdminUsers() {
                                                                     userId: member._id,
                                                                     name:   member.username,
                                                                 })}
-                                                                className="text-[11px] px-2.5 py-1 border border-gray-200 rounded-md text-gray-600 hover:border-red-300 hover:text-red-600 transition"
+                                                                className="text-[11px] px-2.5 py-1 border border-gray-200 rounded-md text-gray-600 cursor-pointer hover:border-red-300 hover:text-red-600 transition"
                                                             >
                                                                 Delete
                                                             </button>
@@ -382,14 +387,14 @@ export default function AdminUsers() {
                                         <button
                                             onClick={() => setPage((p) => Math.max(1, p - 1))}
                                             disabled={!pagination.hasPrev}
-                                            className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50 transition disabled:opacity-40"
+                                            className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 cursor-pointer hover:bg-gray-50 transition disabled:opacity-40"
                                         >
                                             ← Prev
                                         </button>
                                         <button
                                             onClick={() => setPage((p) => p + 1)}
                                             disabled={!pagination.hasNext}
-                                            className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50 transition disabled:opacity-40"
+                                            className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 cursor-pointer hover:bg-gray-50 transition disabled:opacity-40"
                                         >
                                             Next →
                                         </button>
