@@ -26,8 +26,11 @@ export default function LoginPage({ onNavigateRegister }) {
             login(data);
 
             // redirect based on role
-            if (data.user.role === "admin") navigate("/admin/dashboard"); // admin dashboard
-            else navigate("/dashboard"); // member dashboard
+            if (data.user?.role === "admin") {
+                navigate("/admin/dashboard"); // admin dashboard
+            } else {
+                navigate("/dashboard"); // member dashboard
+            }
             
         } catch (err) {
             // show error message from backend

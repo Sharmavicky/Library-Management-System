@@ -4,6 +4,46 @@ const Issue = require("../Models/modelExporter").Issue;
 const paginate = require("../utils/paginate");
 
 /*
+    Add a new book (Admin only)
+    POST /api/books
+*/
+exports.addBooks = async (req, res, next) => {
+    try {
+        const { title, author, isbn, summary, coverImage, bookshelves, totalCopies } = req.body;
+
+        // check if book with same ISBN already exists
+        if (isbn) {
+            const existing = await Book.findOne({ isbn });
+            if (existing) {
+                return res.status(409).json({
+                    success: false,
+                    message: "A Book with same ISBN already exists!!"
+                })
+            }
+        }
+
+        const newBook = await Book.create({
+            title,
+            author,
+            isbn,
+            summary: summary || null,
+            coverImage: coverImage || null,
+            bookshelves: bookshelves || [],
+            totalCopies: totalCopies || 1,
+            availableCopies: totalCopies || 1
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Book added successfully!!",
+            book: newBook
+        })
+    } catch (err) {
+        next(err);
+    }
+}
+
+/*
     Get all books (Protected route, accessible by both members and admins)
     GET /api/books?page=1&limit=10
 */
