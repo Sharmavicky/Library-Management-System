@@ -29,7 +29,7 @@ export default function LoginPage({ onNavigateRegister }) {
             if (data.user?.role === "admin") {
                 navigate("/admin/dashboard"); // admin dashboard
             } else {
-                navigate("/dashboard"); // member dashboard
+                navigate("/member/dashboard"); // member dashboard
             }
             
         } catch (err) {
