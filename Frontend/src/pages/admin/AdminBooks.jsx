@@ -243,7 +243,7 @@ export default function AdminBooks() {
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
-            <NavBar />
+            <NavBar userType="admin" />
             {/* <AdminNav active="Books" /> */}
 
             {/* Toast */}

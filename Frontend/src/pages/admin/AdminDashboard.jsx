@@ -221,7 +221,7 @@ export default function AdminDashboard() {
         <div className="min-h-screen bg-gray-50 font-sans">
     
             {/* ── Top nav bar ── */}
-            <NavBar />
+            <NavBar userType="admin" />
             
         
             <div className="p-5 flex flex-col gap-4 max-w-350 mx-auto">
