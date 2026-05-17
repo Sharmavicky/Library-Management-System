@@ -240,3 +240,35 @@ exports.deleteBook = async (req, res, next) => {
         next(err);
     }
 }
+
+/* fetch book text from url */
+exports.proxyBookText = async (req, res, next) => {
+    try {
+        const { url } = req.query;
+
+        // only allow gutenberg URLs — prevent your proxy being abused
+        if (!url || !url.includes("gutenberg.org")) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid URL!!"
+            });
+        }
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            return res.status(400).json({
+                success: false,
+                message: "Failed to fetch book text from the provided url!!"
+            })
+        }
+
+        const text = await response.text();
+
+        // send as plain text so frontend can use it directly
+        res.setHeader("Content-Type", "text/plain; charset=utf-8");
+        return res.send(text);
+    } catch (err) {
+        next(err);
+    }
+}
