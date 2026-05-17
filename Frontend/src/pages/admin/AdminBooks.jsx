@@ -380,22 +380,60 @@ export default function AdminBooks() {
                                 >
                                     ← Prev
                                 </button>
-                                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                                    const p = i + 1;
-                                    return (
-                                        <button
-                                            key={p}
-                                            onClick={() => setPage(p)}
-                                            className={`px-3 py-1.5 text-xs border rounded-md transition cursor-pointer ${
-                                                p === pagination.page
-                                                    ? "bg-indigo-600 text-white border-indigo-600"
-                                                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                                            }`}
-                                        >
-                                            {p}
-                                        </button>
-                                    );
-                                })}
+                                
+                                {(() => {
+                                    const total   = pagination.totalPages;
+                                    const current = pagination.page;
+                                    const delta   = 2; // pages on each side of current
+
+                                    let start = Math.max(1, current - delta);
+                                    let end   = Math.min(total, current + delta);
+
+                                    // Shift window if near the edges so you always see 5 buttons
+                                    if (current - delta < 1)     end   = Math.min(total, end + (delta - current + 1));
+                                    if (current + delta > total) start = Math.max(1, start - (current + delta - total));
+
+                                    const pages = [];
+
+                                    // Leading ellipsis
+                                    if (start > 1) {
+                                        pages.push(
+                                            <button key={1} onClick={() => setPage(1)}
+                                                className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50 transition cursor-pointer">
+                                                1
+                                            </button>
+                                        );
+                                        if (start > 2) pages.push(<span key="start-ellipsis" className="px-1 text-gray-400 text-xs">…</span>);
+                                    }
+
+                                    // Window pages
+                                    for (let p = start; p <= end; p++) {
+                                        pages.push(
+                                            <button key={p} onClick={() => setPage(p)}
+                                                className={`px-3 py-1.5 text-xs border rounded-md transition cursor-pointer ${
+                                                    p === current
+                                                        ? "bg-indigo-600 text-white border-indigo-600"
+                                                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                                                }`}>
+                                                {p}
+                                            </button>
+                                        );
+                                    }
+
+                                    // Trailing ellipsis
+                                    if (end < total) {
+                                        if (end < total - 1) pages.push(<span key="end-ellipsis" className="px-1 text-gray-400 text-xs">…</span>);
+                                        pages.push(
+                                            <button key={total} onClick={() => setPage(total)}
+                                                className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50 transition cursor-pointer">
+                                                {total}
+                                            </button>
+                                        );
+                                    }
+
+                                    return pages;
+                                })()}
+
                                 <button
                                     onClick={() => setPage((p) => p + 1)}
                                     disabled={!pagination.hasNext}
