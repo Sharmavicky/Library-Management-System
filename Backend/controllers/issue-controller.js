@@ -45,7 +45,7 @@ exports.getAllIssuedBooks = async (req, res, next) => {
 // Issue a book to a member (Protected route, accessible by admin only)
 exports.issueBook = async (req, res, next) => {
     try {
-        const { bookId, userId } = req.body;
+        const { bookId, userId, dueDate } = req.body;
 
         // check if both bookId and userId are valid
         if (!mongoose.Types.ObjectId.isValid(bookId) || !mongoose.Types.ObjectId.isValid(userId)) {
@@ -117,14 +117,20 @@ exports.issueBook = async (req, res, next) => {
         }
 
         // calculate due date by adding ISSUE_DAYS to current date
-        const dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + ISSUE_DAYS);
+        let finalDueDate;
+
+        if (dueDate) {
+            finalDueDate = new Date(dueDate);
+        } else {
+            finalDueDate = new Date();
+            finalDueDate.setDate(finalDueDate.getDate() + ISSUE_DAYS);
+        }
 
         // create issue record with bookSnapShot to preserve book details at the time of issue
         const issueRecord = await Issue.create({
             book: bookId,
             member: userId,
-            dueDate,
+            dueDate: finalDueDate,
             bookSnapShot: {
                 title: book.title,
                 author: book.author
