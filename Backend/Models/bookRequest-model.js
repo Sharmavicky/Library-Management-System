@@ -1,8 +1,14 @@
 const mongoose = require("mongoose");
 const User = require("../Models/modelExporter").User;
 const Book = require("../Models/modelExporter").Book;
+const Issue = require("../Models/modelExporter").Issue;
 
 const bookRequestSchema = new mongoose.Schema({
+    issue: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Issue",
+        default: null
+    },
     member: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
