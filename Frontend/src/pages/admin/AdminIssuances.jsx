@@ -327,7 +327,7 @@ export default function AdminIssuances() {
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
-            <NavBar />
+            <NavBar userType="admin" />
 
             {toast && (
                 <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl text-sm font-medium shadow-lg ${

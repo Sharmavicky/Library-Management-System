@@ -1,13 +1,35 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
 
 const getInitials = (name = "") => {
     return name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 }
 
-export default function NavBar() {
+const adminTabs = [
+    { label: "Dashboard", path: "/admin/dashboard" },
+    { label: "Books", path: "/admin/books" },
+    { label: "Members", path: "/admin/users" },
+    { label: "Issuances", path: "/admin/issuances" },
+    { label: "Fines", path: "/admin/fines" },
+    { label: "Requests", path: "/admin/requests"}
+];
+
+const memberTabs = [
+    { label: "Dashboard", path: "/member/dashboard" },
+    { label: "Catalog", path: "/member/catalog" },
+    { label: "My Fines", path: "/member/fines" },
+    { label: "History", path: "/member/history" },
+]
+
+export default function NavBar({ userType="admin" }) {
     const navigate = useNavigate();
     const { user, logout } = useAuthStore();
+    const isAdmin = userType === "admin"; // return a bool value true/false if it's admin or not
+
+    const dashboardTitle = isAdmin ? "Admin dashboard" : "Member dashboard";
+    const defaultUsername = isAdmin ? "Admin" : "Member";
+
+    const tabs = isAdmin ? adminTabs : memberTabs;
 
     // logout function
     const handleLogout = () => {
@@ -20,46 +42,25 @@ export default function NavBar() {
             <div className="flex items-center gap-3">
                 <span className="text-lg font-bold text-indigo-600">LibraryOS</span>
                 <span className="text-gray-300">|</span>
-                <span className="text-sm text-gray-500">Admin dashboard</span>
+                <span className="text-sm text-gray-500">{dashboardTitle}</span>
             </div>
             <div className="flex items-center gap-4">
                 {/* Quick action buttons */}
-                <button
-                    onClick={() => (navigate("/admin/dashboard"))}
-                    className="text-sm text-gray-600 hover:text-indigo-600 transition font-medium cursor-pointer"
-                >
-                    Dashboard
-                </button>
-                <button
-                    onClick={() => navigate("/admin/books")}
-                    className="text-sm text-gray-600 hover:text-indigo-600 transition font-medium cursor-pointer"
-                >
-                    Books
-                </button>
-                <button
-                    onClick={() => navigate("/admin/users")}
-                    className="text-sm text-gray-600 hover:text-indigo-600 transition font-medium cursor-pointer"
-                >
-                    Members
-                </button>
-                <button
-                    onClick={() => navigate("/admin/issuances")}
-                    className="text-sm text-gray-600 hover:text-indigo-600 transition font-medium cursor-pointer"
-                >
-                    Issuances
-                </button>
-                <button
-                    onClick={() => navigate("/admin/fines")}
-                    className="text-sm text-gray-600 hover:text-indigo-600 transition font-medium cursor-pointer"
-                >
-                    Fines
-                </button>
+                {tabs.map((tab) => (
+                    <button
+                        key={tab.path}
+                        onClick={() => (navigate(tab.path))}
+                        className="text-sm text-gray-600 hover:text-indigo-600 transition font-medium cursor-pointer"
+                    >
+                        {tab.label}
+                    </button>
+                ))}
                 <div className="w-px h-4 bg-gray-200" />
                 <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 text-[11px] font-bold flex items-center justify-center">
-                        {getInitials(user?.username || "Admin")}
+                        {getInitials(user?.username || defaultUsername)}
                     </div>
-                    <span className="text-sm font-medium text-gray-700">{user?.username || "Admin"}</span>
+                    <span className="text-sm font-medium text-gray-700">{user?.username || defaultUsername}</span>
                 </div>
                 <button
                     onClick={handleLogout}

@@ -27,3 +27,8 @@ export const returnBook          = (issueId)             => API.patch(`/issues/$
 export const getAllFines         = (status, page = 1)    => API.get(`/fines?${status ? `status=${status}&` : ""}page=${page}`).then(r => r.data);
 export const payFine             = (fineId, amount)      => API.patch(`/fines/${fineId}/pay`, { amount }).then(r => r.data);
 export const waiveFine           = (fineId, reason)      => API.patch(`/fines/${fineId}/waive`, { reason }).then(r => r.data);
+
+// requests
+export const getAllRequests      = ()                     => API.get(`/requests`).then(r => r.data);
+export const approveRequest      = (requestId)            => API.patch(`/requests/${requestId}/approve`).then(r => r.data);
+export const rejectRequest       = (requestId, reason)    => API.patch(`/requests/${requestId}/reject`, { reason }).then(r => r.data);

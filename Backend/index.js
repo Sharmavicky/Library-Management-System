@@ -74,6 +74,7 @@ app.use("/api/books",   require("./src/routes/bookRoutes"));
 app.use("/api/issues",  require("./src/routes/issueRoute"));
 app.use("/api/users",   require("./src/routes/userRoutes"));
 app.use("/api/fines",   require("./src/routes/fineRoutes"));
+app.use("/api/requests", require("./src/routes/bookRequestRoutes"));
 app.use("/api/reports", require("./src/routes/reportRoutes"));
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
