@@ -8,6 +8,7 @@ import {
     addBooks,
 } from "../../services/adminServices";
 import NavBar from "../../Components/NavBar";
+import { LuX, LuTrash2, LuSearch, LuPlus } from "react-icons/lu"
 
 function AvailabilityPill({ available, total }) {
     const pct = total > 0 ? (available / total) * 100 : 0;
@@ -43,6 +44,81 @@ function SkeletonRow() {
     );
 }
 
+// Mobile skeleton card
+function SkeletonCard() {
+    return (
+        <div className="p-4 border-b border-gray-100 animate-pulse">
+            <div className="flex items-start justify-between mb-3">
+                <div>
+                    <div className="h-3 bg-gray-100 rounded w-36 mb-1.5" />
+                    <div className="h-2.5 bg-gray-100 rounded w-24" />
+                </div>
+                <div className="h-2.5 bg-gray-100 rounded w-16" />
+            </div>
+            <div className="flex items-center gap-2">
+                <div className="h-2.5 bg-gray-100 rounded w-20" />
+                <div className="h-2.5 bg-gray-100 rounded w-14" />
+            </div>
+        </div>
+    );
+}
+
+// Mobile book card
+function BookCard({ book, onEdit, onDelete }) {
+    const pct = book.totalCopies > 0 ? (book.availableCopies / book.totalCopies) * 100 : 0;
+    const pillColor =
+        pct === 0   ? "bg-red-100 text-red-700"
+      : pct <= 33   ? "bg-amber-100 text-amber-700"
+      :               "bg-green-100 text-green-700";
+    const barColor =
+        pct === 0   ? "bg-red-500"
+      : pct <= 33   ? "bg-amber-500"
+      :               "bg-green-500";
+
+    return (
+        <div className="p-4 border-b border-gray-100 last:border-0">
+            <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="min-w-0">
+                    <div className="font-medium text-gray-900 text-sm leading-snug truncate">{book.title}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{book.author}</div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                        onClick={() => onEdit(book)}
+                        className="text-[11px] px-2.5 py-1 border border-gray-200 rounded-md text-gray-600 hover:border-indigo-400 hover:text-indigo-600 transition"
+                    >
+                        Edit
+                    </button>
+                    <button
+                        onClick={() => onDelete(book)}
+                        className="text-[11px] px-2.5 py-1 border border-gray-200 rounded-md text-gray-600 hover:border-red-300 hover:text-red-600 transition"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+                {book.isbn && (
+                    <span className="text-[11px] text-gray-400 font-mono">{book.isbn}</span>
+                )}
+                {book.bookshelves?.[0] && (
+                    <span className="text-[11px] px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full font-medium">
+                        {book.bookshelves[0]}
+                    </span>
+                )}
+                <div className="flex items-center gap-1.5 ml-auto">
+                    <div className="w-14 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${pillColor}`}>
+                        {book.availableCopies}/{book.totalCopies}
+                    </span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // ─── Add / Edit Modal ─────────────────────────────────────────────────────────
 function BookModal({ book, onClose, onSave, isSaving }) {
     const isEdit = !!book?._id;
@@ -68,8 +144,8 @@ function BookModal({ book, onClose, onSave, isSaving }) {
         "text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1 block";
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 sm:px-4">
+            <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-md max-h-[90dvh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                     <h2 className="text-base font-semibold text-gray-900">
@@ -79,12 +155,12 @@ function BookModal({ book, onClose, onSave, isSaving }) {
                         onClick={onClose}
                         className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 cursor-pointer hover:bg-gray-50 transition"
                     >
-                        ✕
+                        <LuX size={18} />
                     </button>
                 </div>
 
                 {/* Body */}
-                <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-4">
+                <form onSubmit={handleSubmit} className="px-5 sm:px-6 py-5 flex flex-col gap-4">
                     <div>
                         <label className={labelClass}>Title</label>
                         <input className={inputClass} value={form.title} onChange={set("title")} required placeholder="Book title" />
@@ -138,23 +214,23 @@ function BookModal({ book, onClose, onSave, isSaving }) {
 // ─── Delete confirm modal ─────────────────────────────────────────────────────
 function DeleteModal({ book, onClose, onConfirm, isDeleting }) {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 sm:px-4">
+            <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-sm p-6 text-center">
                 <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    <LuTrash2 size={20} className="text-red-500" />
                 </div>
                 <h3 className="text-base font-semibold text-gray-900 mb-1">Delete "{book?.title}"?</h3>
                 <p className="text-sm text-gray-500 mb-5">
                     This cannot be undone. The book will be permanently removed from the catalog.
                 </p>
-                <div className="flex gap-2 justify-center">
-                    <button onClick={onClose} className="px-4 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 cursor-pointer hover:bg-gray-50 transition">
+                <div className="flex gap-2 justify-center pb-safe">
+                    <button onClick={onClose} className="flex-1 sm:flex-initial px-4 py-2.5 sm:py-2 text-sm border border-gray-200 rounded-lg text-gray-600 cursor-pointer hover:bg-gray-50 transition">
                         Cancel
                     </button>
                     <button
                         onClick={onConfirm}
                         disabled={isDeleting}
-                        className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg font-semibold cursor-pointer hover:bg-red-700 transition disabled:opacity-50"
+                        className="flex-1 sm:flex-initial px-4 py-2.5 sm:py-2 text-sm bg-red-600 text-white rounded-lg font-semibold cursor-pointer hover:bg-red-700 transition disabled:opacity-50"
                     >
                         {isDeleting ? "Deleting..." : "Yes, delete"}
                     </button>
@@ -244,11 +320,10 @@ export default function AdminBooks() {
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
             <NavBar userType="admin" />
-            {/* <AdminNav active="Books" /> */}
 
             {/* Toast */}
             {toast && (
-                <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl text-sm font-medium shadow-lg transition ${
+                <div className={`fixed bottom-4 left-4 right-4 sm:bottom-auto sm:top-4 sm:left-auto sm:right-4 sm:max-w-sm z-50 px-4 py-3 rounded-xl text-sm font-medium shadow-lg transition ${
                     toast.type === "error"
                         ? "bg-red-50 border border-red-200 text-red-700"
                         : "bg-green-50 border border-green-200 text-green-700"
@@ -257,52 +332,52 @@ export default function AdminBooks() {
                 </div>
             )}
 
-            <div className="p-5 max-w-350 mx-auto flex flex-col gap-4">
+            <div className="p-4 sm:p-6 pb-24 sm:pb-8 max-w-7xl mx-auto flex flex-col gap-4">
 
                 {/* Page header */}
-                <div className="flex items-center justify-between">
-                    <div>
+                <div className="flex items-start sm:items-center justify-between gap-3">
+                    <div className="min-w-0">
                         <h1 className="text-xl font-semibold text-gray-900">Books</h1>
-                        <p className="text-sm text-gray-400 mt-0.5">
+                        <p className="text-sm text-gray-400 mt-0.5 truncate">
                             {pagination.total ? `${pagination.total} books in catalog` : "Manage your book catalog"}
                         </p>
                     </div>
                     <button
                         onClick={() => setModalBook({})}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold cursor-pointer hover:bg-indigo-700 transition"
+                        className="shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold cursor-pointer hover:bg-indigo-700 transition"
                     >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        Add book
+                        <LuPlus size={16} />
+                        <span>Add book</span>
                     </button>
                 </div>
 
                 {/* Search bar */}
                 <form onSubmit={handleSearch} className="flex gap-2">
-                    <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 flex-1 max-w-sm">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 flex-1 min-w-0 sm:max-w-sm">
+                        <LuSearch size={16} className="shrink-0 text-gray-400" />
                         <input
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
                             placeholder="Search by title or author..."
-                            className="text-sm outline-none text-gray-700 flex-1 bg-transparent"
+                            className="text-sm outline-none text-gray-700 flex-1 min-w-0 bg-transparent"
                         />
                     </div>
-                    <button type="submit" className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg cursor-pointer hover:bg-indigo-700 transition">
+                    <button type="submit" className="shrink-0 px-3 sm:px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg cursor-pointer hover:bg-indigo-700 transition">
                         Search
                     </button>
                     {searchQuery && (
                         <button
                             type="button"
                             onClick={() => { setSearchQuery(""); setSearchInput(""); setPage(1); }}
-                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-500 cursor-pointer hover:bg-gray-50 transition"
+                            className="shrink-0 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-500 cursor-pointer hover:bg-gray-50 transition"
                         >
                             Clear
                         </button>
                     )}
                 </form>
 
-                {/* Table */}
-                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                {/* Table — desktop only */}
+                <div className="hidden sm:block bg-white border border-gray-200 rounded-xl overflow-hidden">
                     <table className="w-full text-sm border-collapse">
                         <thead>
                             <tr className="bg-gray-50">
@@ -366,7 +441,7 @@ export default function AdminBooks() {
                         </tbody>
                     </table>
 
-                    {/* Pagination */}
+                    {/* Pagination — desktop */}
                     {pagination.totalPages > 1 && (
                         <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
                             <span className="text-xs text-gray-400">
@@ -438,6 +513,52 @@ export default function AdminBooks() {
                                     onClick={() => setPage((p) => p + 1)}
                                     disabled={!pagination.hasNext}
                                     className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 cursor-pointer hover:bg-gray-50 transition disabled:opacity-40"
+                                >
+                                    Next →
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Card list — mobile only */}
+                <div className="sm:hidden bg-white border border-gray-200 rounded-xl overflow-hidden">
+                    {isLoading
+                        ? Array(6).fill(0).map((_, i) => <SkeletonCard key={i} />)
+                        : books.length === 0
+                        ? (
+                            <div className="py-16 text-center text-sm text-gray-400">
+                                {searchQuery ? `No books found for "${searchQuery}"` : "No books in catalog yet"}
+                            </div>
+                        )
+                        : books.map((book) => (
+                            <BookCard
+                                key={book._id}
+                                book={book}
+                                onEdit={setModalBook}
+                                onDelete={setDeleteBook_}
+                            />
+                        ))
+                    }
+
+                    {/* Pagination — mobile */}
+                    {pagination.totalPages > 1 && (
+                        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+                            <span className="text-xs text-gray-400">
+                                {pagination.page} / {pagination.totalPages}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                    disabled={!pagination.hasPrev}
+                                    className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50 transition disabled:opacity-40"
+                                >
+                                    ← Prev
+                                </button>
+                                <button
+                                    onClick={() => setPage((p) => p + 1)}
+                                    disabled={!pagination.hasNext}
+                                    className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50 transition disabled:opacity-40"
                                 >
                                     Next →
                                 </button>

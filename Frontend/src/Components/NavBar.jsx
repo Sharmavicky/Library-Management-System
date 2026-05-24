@@ -1,4 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import useAuthStore from "../store/authStore";
 
 // ─── icons ──────────────────────────────────────────────────────────────────
@@ -12,6 +14,7 @@ import {
     MdHistory,
     MdOutlineLogout
 } from "react-icons/md";
+
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const getInitials = (name = "") =>
@@ -64,8 +67,35 @@ const memberTabs = [
     },
 ];
 
+// logout modal 
+function LogoutModal({ onConfirm, onCancel }) {
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-80 text-center">
+                <h2 className="text-xl font-semibold mb-4">Confirm Logout</h2>
+                <p className="text-gray-600 mb-6">Are you sure you want to logout?</p>
+                <div className="flex justify-center gap-3">
+                    <button
+                        onClick={onCancel}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium cursor-pointer hover:bg-gray-300 transition"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium cursor-pointer hover:bg-red-700 transition"
+                    >
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 // ─── NavBar ───────────────────────────────────────────────────────────────────
 export default function NavBar({ userType = "admin" }) {
+    const queryClient = useQueryClient();
     const navigate  = useNavigate();
     const location  = useLocation();
     const { user, logout } = useAuthStore();
@@ -74,16 +104,43 @@ export default function NavBar({ userType = "admin" }) {
     const tabs           = isAdmin ? adminTabs : memberTabs;
     const defaultUsername = isAdmin ? "Admin" : "Member";
 
+    const [toast, setToast] = useState(null);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+
     const handleLogout = () => {
-        logout();
-        navigate("/login", { replace: true });
-    };
+        setShowLogoutModal(true);
+    }
+
+    const showToast = (message, type="success") => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    }
+
+    const logoutMutation = useMutation({
+        mutationFn: () => logout(),
+        onSuccess: () => {
+            queryClient.clear(); // clear all cached data
+            navigate("/login", { replace: true });
+        },
+        onError: (err) => {
+            showToast(err.response?.data?.message || "Logout failed. Please try again.");
+        }
+    })
 
     // active tab — matches current path
     const isActive = (path) => location.pathname === path;
 
     return (
         <>
+            {/* Toast */}
+            {toast && (
+                <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg text-sm font-medium z-50 ${
+                    toast.type === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                }`}>
+                    {toast.message}
+                </div>
+            )}
+
             {/* ══════════════════════════════════════════════════════════════
                 DESKTOP NAV — hidden on mobile, visible md and above
                 Exactly as your original NavBar — untouched
@@ -192,6 +249,17 @@ export default function NavBar({ userType = "admin" }) {
                     })}
                 </div>
             </div>
+
+            {/* Logout Confirmation Modal */}
+            {showLogoutModal && (
+                <LogoutModal
+                    onConfirm={() => {
+                        logoutMutation.mutate();
+                        setShowLogoutModal(false);
+                    }}
+                    onCancel={() => setShowLogoutModal(false)}
+                />
+            )}
         </>
     );
 }

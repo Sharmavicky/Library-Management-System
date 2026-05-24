@@ -18,8 +18,9 @@ const avatarPalette = [
     { bg: "bg-amber-100",  text: "text-amber-700"   },
     { bg: "bg-rose-100",   text: "text-rose-700"    },
 ];
+
 const getAvatar = (name = "") =>
-    avatarPalette[name.charCodeAt(0) % avatarPalette.length];
+    avatarPalette[(name?.charCodeAt(0) || 0) % avatarPalette.length];
 
 const fmtCurrency = (n = 0) => `₹${Number(n).toLocaleString("en-IN")}`;
 const fmtDate = (d) =>
@@ -60,6 +61,108 @@ function SkeletonRow() {
     );
 }
 
+// ─── Skeleton card (mobile / tablet) ─────────────────────────────────────────
+function SkeletonCard() {
+    return (
+        <div className="p-4 border-b border-gray-100 animate-pulse">
+            <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-full bg-gray-100 shrink-0" />
+                <div className="flex-1 min-w-0">
+                    <div className="h-3 bg-gray-100 rounded w-28 mb-1.5" />
+                    <div className="h-2.5 bg-gray-100 rounded w-40" />
+                </div>
+                <div className="h-5 bg-gray-100 rounded-full w-16 shrink-0" />
+            </div>
+            <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="h-10 bg-gray-100 rounded-lg" />
+                <div className="h-10 bg-gray-100 rounded-lg" />
+                <div className="h-10 bg-gray-100 rounded-lg" />
+            </div>
+            <div className="flex gap-2">
+                <div className="h-8 bg-gray-100 rounded-md flex-1" />
+                <div className="h-8 bg-gray-100 rounded-md flex-1" />
+            </div>
+        </div>
+    );
+}
+
+// ─── Fine card (mobile / tablet) ─────────────────────────────────────────────
+function FineCard({ fine, onPay, onWaive }) {
+    const name      = fine.member?.username || "Unknown";
+    const avatar    = getAvatar(name);
+    const balance   = fine.totalAmount - fine.paidAmount;
+    const isSettled = fine.status === "paid" || fine.status === "waived";
+    const bookTitle = fine.issue?.book?.title || fine.issue?.bookSnapshot?.title || "—";
+
+    return (
+        <div className="p-4 border-b border-gray-100 last:border-0">
+            {/* Top row: avatar + member/book + status */}
+            <div className="flex items-start gap-3 mb-3">
+                <div className={`w-9 h-9 rounded-full ${avatar.bg} ${avatar.text} flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5`}>
+                    {getInitials(name)}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-gray-900 text-sm truncate">{name}</span>
+                        <StatusBadge status={fine.status} />
+                    </div>
+                    <div className="text-sm text-gray-600 truncate mt-0.5">{bookTitle}</div>
+                        {fine.issue?.dueDate && (
+                            <div className="text-xs text-gray-400 mt-0.5">Due: {fmtDate(fine.issue.dueDate)}</div>
+                        )}
+                    </div>
+                </div>
+                
+
+            {/* Amounts grid */}
+            <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="bg-gray-50 rounded-lg px-3 py-2 text-center">
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Fine</div>
+                    <div className="text-sm font-semibold text-gray-900">{fmtCurrency(fine.totalAmount)}</div>
+                    <div className="text-[10px] text-gray-400">{fine.daysOverdue}d × ₹{fine.ratePerDay}</div>
+                </div>
+                <div className="bg-green-50 rounded-lg px-3 py-2 text-center">
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Paid</div>
+                    <div className="text-sm font-semibold text-green-600">{fmtCurrency(fine.paidAmount)}</div>
+                </div>
+                <div className={`rounded-lg px-3 py-2 text-center ${balance > 0 ? "bg-red-50" : "bg-gray-50"}`}>
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Balance</div>
+                    <div className={`text-sm font-bold ${balance > 0 ? "text-red-600" : "text-gray-400"}`}>
+                        {fmtCurrency(balance)}
+                    </div>
+                </div>
+            </div>
+
+            {/* Actions */}
+            {!isSettled ? (
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => onPay(fine)}
+                        className="flex-1 text-xs py-2 border border-gray-200 rounded-md text-gray-600 font-medium cursor-pointer hover:border-indigo-400 hover:text-indigo-600 transition"
+                    >
+                        Pay
+                    </button>
+                    <button
+                        onClick={() => onWaive(fine)}
+                        className="flex-1 text-xs py-2 border border-gray-200 rounded-md text-gray-600 cursor-pointer hover:border-red-300 hover:text-red-600 transition"
+                    >
+                        Waive
+                    </button>
+                </div>
+            ) : fine.status === "waived" ? (
+                <div className="text-xs text-gray-400 italic truncate" title={fine.waivedReason}>
+                    Waived: {fine.waivedReason?.slice(0, 40) || "—"}
+                </div>
+            ) : (
+                <div className="text-xs text-gray-400 flex items-center gap-1">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Paid {fmtDate(fine.paidAt)}
+                </div>
+            )}
+        </div>
+    )
+}
+
 // ─── Pay Fine Modal ───────────────────────────────────────────────────────────
 function PayFineModal({ fine, onClose, onPay, isPaying }) {
     const balance = fine.totalAmount - fine.paidAmount;
@@ -75,9 +178,13 @@ function PayFineModal({ fine, onClose, onPay, isPaying }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm sm:px-4">
+            <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-sm overflow-hidden max-h-[92dvh] flex flex-col">
+                {/* Drag handle — mobile only */}
+                <div className="flex justify-center pt-3 pb-1 sm:hidden shrink-0">
+                    <div className="w-10 h-1 rounded-full bg-gray-200" />
+                </div>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
                     <h2 className="text-base font-semibold text-gray-900">Record payment</h2>
                     <button
                         onClick={onClose}
@@ -206,8 +313,12 @@ function WaiveFineModal({ fine, onClose, onWaive, isWaiving }) {
     ];
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm sm:px-4">
+            <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-sm overflow-hidden max-h-[92dvh] overflow-y-auto">
+                {/* Drag handle — mobile only */}
+                <div className="flex justify-center pt-3 pb-1 sm:hidden">
+                    <div className="w-10 h-1 rounded-full bg-gray-200" />
+                </div>
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                     <h2 className="text-base font-semibold text-gray-900">Waive fine</h2>
                     <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 transition">✕</button>
@@ -341,7 +452,7 @@ export default function AdminFines() {
 
             {/* Toast */}
             {toast && (
-                <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl text-sm font-medium shadow-lg ${
+                <div className={`fixed bottom-4 left-4 right-4 sm:bottom-auto sm:top-4 sm:left-auto sm:right-4 sm:max-w-sm z-50 px-4 py-3 rounded-xl text-sm font-medium shadow-lg ${
                     toast.type === "error"
                         ? "bg-red-50 border border-red-200 text-red-700"
                         : "bg-green-50 border border-green-200 text-green-700"
@@ -350,11 +461,11 @@ export default function AdminFines() {
                 </div>
             )}
 
-            <div className="p-5 max-w-350 mx-auto flex flex-col gap-4">
+            <div className="p-4 sm:p-5 pb-24 sm:pb-8 max-w-7xl mx-auto flex flex-col gap-4">
 
                 {/* Page header */}
-                <div className="flex items-center justify-between">
-                    <div>
+                <div className="flex items-start sm:items-center justify-between gap-3 min-w-0">
+                    <div className="min-w-0">
                         <h1 className="text-xl font-semibold text-gray-900">Fines</h1>
                         <p className="text-sm text-gray-400 mt-0.5">
                             {pagination.total
@@ -364,21 +475,21 @@ export default function AdminFines() {
                     </div>
                     {/* Outstanding summary pill */}
                     {!isLoading && totalOutstanding > 0 && (
-                        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-2">
-                            <span className="text-xs text-red-600">Total outstanding</span>
-                            <span className="text-base font-bold text-red-700">{fmtCurrency(totalOutstanding)}</span>
+                        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-3 sm:px-4 py-2 shrink-0">
+                            <span className="text-xs text-red-600 hidden sm:inline">Total outstanding</span>
+                            <span className="text-sm sm:text-base font-bold text-red-700">{fmtCurrency(totalOutstanding)}</span>
                         </div>
                     )}
                     {!isLoading && totalOutstanding === 0 && filter === "all" && (
-                        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2">
-                            <span className="text-xs text-green-600 font-medium">All fines cleared ✓</span>
+                        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-3 sm:px-4 py-2 shrink-0">
+                            <span className="text-xs text-green-600 font-medium">All cleared ✓</span>
                         </div>
                     )}
                 </div>
 
                 {/* Summary stat cards */}
                 {!isLoading && (
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {[
                             { label: "Total records", value: pagination.total ?? 0,          color: "text-gray-900",   bg: "bg-white"       },
                             { label: "Pending",        value: fines.filter(f => f.status === "pending").length, color: "text-amber-600", bg: "bg-amber-50"    },
@@ -394,22 +505,24 @@ export default function AdminFines() {
                 )}
 
                 {/* Filter tabs */}
-                <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit">
-                    {filterTabs.map((tab) => (
-                        <button key={tab.key} onClick={() => { setFilter(tab.key); setPage(1); }}
-                            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer ${
-                                filter === tab.key
-                                    ? "bg-indigo-600 text-white"
-                                    : "text-gray-500 hover:text-indigo-600"
-                            }`}>
-                            {tab.label}
-                        </button>
-                    ))}
+                <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                    <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit min-w-max">
+                        {filterTabs.map((tab) => (
+                            <button key={tab.key} onClick={() => { setFilter(tab.key); setPage(1); }}
+                                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer whitespace-nowrap ${
+                                    filter === tab.key
+                                        ? "bg-indigo-600 text-white"
+                                        : "text-gray-500 hover:text-indigo-600"
+                                }`}>
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
-                {/* Table */}
-                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                    <table className="w-full text-sm border-collapse">
+                {/* ── Desktop table (lg+) ── */}
+                <div className="hidden lg:block bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <table className="w-full text-sm border-collapse">
                         <thead>
                             <tr className="bg-gray-50">
                                 {["Member", "Book", "Days late", "Fine", "Paid", "Balance", "Status", "Actions"].map((h) => (
@@ -554,6 +667,72 @@ export default function AdminFines() {
                         </div>
                     )}
                 </div>
+            </div>
+
+            {/* ── Mobile & Tablet cards (< lg) ── */}
+            <div className="lg:hidden bg-white border border-gray-200 rounded-xl overflow-hidden">
+                {isLoading
+                    ? Array(6).fill(0).map((_, i) => (
+                        <SkeletonCard key={i} />
+                    ))
+                    : fines.length === 0
+                    ? (
+                        <div className="py-16 flex flex-col items-center gap-2">
+                            <svg
+                                width="36"
+                                height="36"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                className="text-gray-200"
+                            >
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
+
+                            <span className="text-sm text-gray-400">
+                                No {filter !== "all" ? filter : ""} fines found
+                            </span>
+                        </div>
+                    )
+                    : fines.map((fine, i) => (
+                        <FineCard
+                            key={fine._id || i}
+                            fine={fine}
+                            onPay={setPayFine_}
+                            onWaive={setWaiveFine_}
+                        />
+                    ))
+                }
+
+                {/* Pagination */}
+                {pagination.totalPages > 1 && (
+                    <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+                        <span className="text-xs text-gray-400">
+                            Page {pagination.page} of {pagination.totalPages}
+                        </span>
+
+                        <div className="flex gap-1.5">
+                            <button
+                                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                disabled={!pagination.hasPrev}
+                                className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition"
+                            >
+                                ← Prev
+                            </button>
+
+                            <button
+                                onClick={() => setPage((p) => p + 1)}
+                                disabled={!pagination.hasNext}
+                                className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition"
+                            >
+                                Next →
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Pay modal */}
