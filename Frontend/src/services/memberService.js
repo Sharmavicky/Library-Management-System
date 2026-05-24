@@ -10,7 +10,7 @@ export const getAllBooks = async (page=1, limit=10) => API.get(`/books?page=${pa
 
 export const searchBooks = async (query, page=1) => API.get(`/books/search?query=${query}&page=${page}`).then(r => r.data);
 
-export const requestBook = async (bookId) => API.post(`/books/${bookId}/request`).then(r => r.data);
-
 export const getReadAccess = async (issueId) => API.get(`/issues/read/${issueId}`).then(r => r.data);
 export const fetchBookText = async (url) => API.get(`/books/proxy-text?url=${encodeURIComponent(url)}`).then(r => r.data);
+
+export const requestBook = async (bookId) => API.post(`/requests/${ bookId }`).then(r => r.data);
