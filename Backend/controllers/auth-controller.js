@@ -1,11 +1,16 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../Models/user-model");
+const { generateOTP } = require("../utils/otpHelper");
+const { sendOTPEmail } = require("../src/config/mailer");
 const {
     saveRefreshToken,
     deleteRefreshToken,
     blacklistToken,
-    getRefreshToken
+    getRefreshToken,
+    saveOTP,
+    getOTP,
+    deleteOTP
 } = require("../utils/tokenCache");
 
 // Register new user
@@ -13,7 +18,7 @@ exports.registerUser = async (req, res, next) => {
     try {
         const { username, email, password } = req.body;
 
-        // validate date
+        // validate data
         if (!username || !email || !password) {
             return res.status(400).json({
                 success: false,
@@ -25,6 +30,20 @@ exports.registerUser = async (req, res, next) => {
         const existingUser = await User.findOne({ email });
 
         if (existingUser) {
+            // if registered but not verified than resend OTP
+            if (!existingUser.isVerified) {
+                const otp = generateOTP();
+                await saveOTP(email, otp);
+                await sendOTPEmail(email, otp);
+
+                return res.status(200).json({
+                    success: true,
+                    message: "OTP resent successfully!! Please verify your email to activate your account.",
+                    email,
+                    requiredVerification: true
+                })
+            }
+
             return res.status(409).json({
                 success: false,
                 message: "User already exists!!"
@@ -35,37 +54,143 @@ exports.registerUser = async (req, res, next) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // create new user
-        const newUser = await User.create({ username, email, password: hashedPassword });
+        const newUser = await User.create({
+            username,
+            email,
+            password: hashedPassword,
+            isVerified: false // user needs to verify email to activate account
+        });
 
-        // sign a token
-        const accessToken = jwt.sign(
-            { id: newUser._id },
-            process.env.JWT_SECRET,
-            { expiresIn: "1d"}
-        );
-
-        // sign in refreshToken
-        const refreshToken = jwt.sign(
-            { id: newUser._id},
-            process.env.JWT_REFRESH_SECRET,
-            { expiresIn: "7d" }
-        )
-
-        // save refresh token in redis with userId as key
-        await saveRefreshToken(newUser._id.toString(), refreshToken);
+        // generate OTP and save in redis
+        const otp = generateOTP();
+        await saveOTP(email, otp);
+        await sendOTPEmail(email, otp);
 
         return res.status(201).json({
             success: true,
-            message: "Account created successfully!!",
+            message: "Account created successfully!! Please verify your email to activate your account.",
+            email,
+            requiredVerification: true
+        })
+    } catch(err) {
+        next(err);
+    }
+}
+
+// Verify OTP for email verification
+exports.verifyOTP = async (req, res, next) => {
+    try {
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and OTP are required!!"
+            })
+        }
+
+        const storedOTP = await getOTP(email);
+
+        if (!storedOTP) {
+            return res.status(400).json({
+                success: false,
+                message: "OTP expired or not found!! Please register again to receive a new OTP."
+            })
+        }
+
+        if (storedOTP !== otp.toString()) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid OTP!! Please try again."
+            })
+        }
+
+        // OTP matched - verify user account
+        const user = await User.findOneAndUpdate(
+            { email },
+            { isVerified: true },
+            { new: true }
+        );
+        
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "User not found!!"
+            })
+        }
+
+        // delete OTP from redis - no longer needed
+        await deleteOTP(email);
+
+        // now issue token user if fully verified 
+        const accessToken = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "1d" }
+        );
+
+        const refreshToken = jwt.sign(
+            { id: user._id },
+            process.env.JWT_REFRESH_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        // save refresh token in redis
+        await saveRefreshToken(user._id.toString(), refreshToken);
+
+        return res.status(200).json({
+            success: true,
+            message: "Email verified successfully!!",
             accessToken,
             refreshToken,
             user: {
-                _id: newUser._id,
-                email: newUser.email,
-                username: newUser.username
+                _id: user._id,
+                email: user.email,
+                username: user.username,
+                role: user.role
             }
         })
-    } catch(err) {
+    } catch (err) {
+        next(err);
+    }
+}
+
+// Resend OTP for email verification
+exports.resendOTP = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Email is required!!"
+            })
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "User not found!!"
+            })
+        }
+        
+        if (user.isVerified) {
+            return res.status(400).json({
+                success: false,
+                message: "Your account is already verified!! Please login to continue."
+            })
+        }
+
+        const otp = generateOTP();
+        await saveOTP(email, otp);
+        await sendOTPEmail(email, otp);
+
+        return res.status(200).json({
+            success: true,
+            message: "OTP resent successfully!! Please verify your email to activate your account."
+        })
+    } catch (err) {
         next(err);
     }
 }
@@ -98,6 +223,20 @@ exports.loginUser = async (req, res, next) => {
             return res.status(409).json({
                 success: false,
                 message: "User not found!!"
+            })
+        }
+
+        if (!user.isVerified) {
+            // resend OTP so they can verify and activate their account
+            const otp = generateOTP();
+            await saveOTP(email, otp);
+            await sendOTPEmail(email, otp);
+
+            return res.status(403).json({
+                success: false,
+                message: "Your account is not verified!! Please verify your email to activate your account.",
+                email,
+                requiredVerification: true
             })
         }
 
