@@ -9,7 +9,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendOTPEmail = async (toEmail, otp) => {
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
         from:    `"LibraryOS" <${process.env.EMAIL_USER}>`,
         to:      toEmail,
         subject: "Your LibraryOS verification code",
@@ -31,6 +31,15 @@ const sendOTPEmail = async (toEmail, otp) => {
             </div>
         `,
     });
+
+    // check for invalid email and other errors
+    if (info.rejected && info.rejected.length > 0) {
+        const error = new Error(`Failed to send OTP email to ${toEmail}`);
+        error.code = "EMAIL_SEND_FAILURE";
+        throw error;
+    }
+
+    return info;
 };
 
 const sendReminderEmail = async (toEmail, username, daysLeft, dueDate) => {

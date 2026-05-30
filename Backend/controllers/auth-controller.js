@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../Models/user-model");
+const { validate } = require("deep-email-validator");
 const { generateOTP } = require("../utils/otpHelper");
 const { sendOTPEmail } = require("../src/config/mailer");
 const {
@@ -26,6 +27,15 @@ exports.registerUser = async (req, res, next) => {
             })
         }
 
+        // validate email format
+        const isValidEmail = await validate(email);
+        if (!isValidEmail.valid) {
+            return res.status(400).json({
+                success: false,
+                message: "Email is invalid or does not exist!!"
+            })
+        }
+
         // validate if user already exist
         const existingUser = await User.findOne({ email });
 
@@ -34,7 +44,16 @@ exports.registerUser = async (req, res, next) => {
             if (!existingUser.isVerified) {
                 const otp = generateOTP();
                 await saveOTP(email, otp);
-                await sendOTPEmail(email, otp);
+
+                try {
+                    await sendOTPEmail(email, otp);
+                } catch (mailErr) {
+                    await deleteOTP(email); // cleanup OTP if email sending fails
+                    return res.status(500).json({
+                        success: false,
+                        message: "Failed to send OTP email!! Please try again later."
+                    })
+                }
 
                 return res.status(200).json({
                     success: true,
@@ -64,7 +83,18 @@ exports.registerUser = async (req, res, next) => {
         // generate OTP and save in redis
         const otp = generateOTP();
         await saveOTP(email, otp);
-        await sendOTPEmail(email, otp);
+
+        try {
+            await sendOTPEmail(email, otp);
+        } catch (mailErr) {
+            // if email sending fails, delete the created user and OTP to avoid orphan records
+            await User.findByIdAndDelete(newUser._id);
+            await deleteOTP(email); // cleanup OTP if email sending fails
+            return res.status(500).json({
+                success: false,
+                message: "Failed to send OTP email!! Please try again later."
+            })
+        }
 
         return res.status(201).json({
             success: true,
