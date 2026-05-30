@@ -5,7 +5,9 @@ const validateEnv = () => {
         "JWT_REFRESH_SECRET",
         "REDIS_URL",
         "PORT",
-        "NODE_ENV"
+        "NODE_ENV",
+        "EMAIL_USER",
+        "EMAIL_PASS"
     ];
 
     const missing = required.filter(key => !process.env[key]);

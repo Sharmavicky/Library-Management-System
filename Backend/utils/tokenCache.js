@@ -26,6 +26,21 @@ const blacklistToken = async (token, expiresIn) => {
     await redisClient.setEx(`${TOKEN_PREFIX.blacklist}:${token}`, expiresIn, "true");
 }
 
+// save OTP in Redis — expires in 10 minutes (600 seconds)
+const saveOTP = async (email, otp) => {
+    await redisClient.setEx(`otp: ${email}`, 600, otp);
+}
+
+// get OTP from Redis using email
+const getOTP = async (email) => {
+    return await redisClient.get(`otp: ${email}`);
+}
+
+// delete OTP from Redis using email after successful verification
+const deleteOTP = async (email) => {
+    return await redisClient.del(`otp: ${email}`);
+}
+
 // check if a token is blacklisted by looking it up in redis
 const isTokenBlacklisted = async (token) => {
     const res = await redisClient.get(`${TOKEN_PREFIX.blacklist}:${token}`);
@@ -37,5 +52,8 @@ module.exports = {
     getRefreshToken,
     deleteRefreshToken,
     blacklistToken,
-    isTokenBlacklisted
+    isTokenBlacklisted,
+    saveOTP,
+    getOTP,
+    deleteOTP
 };

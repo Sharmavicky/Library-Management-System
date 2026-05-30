@@ -5,15 +5,6 @@ import { getMyFines } from "../../services/memberService";
 import useAuthStore from "../../store/authStore";
 import NavBar from "../../Components/NavBar";
 
-const getInitials  = (name = "") => name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-const avatarPalette = [
-    { bg: "bg-teal-100", text: "text-teal-700" },
-    { bg: "bg-purple-100", text: "text-purple-700" },
-    { bg: "bg-blue-100", text: "text-blue-700" },
-    { bg: "bg-amber-100", text: "text-amber-700" },
-    { bg: "bg-rose-100", text: "text-rose-700" },
-];
-const getAvatar    = (name = "") => avatarPalette[name.charCodeAt(0) % avatarPalette.length];
 const fmtCurrency  = (n = 0) => `₹${Number(n).toLocaleString("en-IN")}`;
 const fmtDate      = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
 
@@ -51,44 +42,6 @@ function SkeletonRow() {
     );
 }
 
-// function MemberNav({ active }) {
-//     const navigate = useNavigate();
-//     const { user, logout } = useAuthStore();
-//     const avatar = getAvatar(user?.username || "");
-//     const links = [
-//         { label: "My books",  path: "/dashboard" },
-//         { label: "Browse",    path: "/browse"     },
-//         { label: "History",   path: "/history"    },
-//         { label: "My fines",  path: "/fines"      },
-//     ];
-//     return (
-//         <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
-//             <div className="flex items-center gap-3">
-//                 <span className="text-lg font-bold text-indigo-600">LibraryOS</span>
-//                 <span className="text-gray-300">|</span>
-//                 <div className="flex items-center gap-1">
-//                     {links.map((l) => (
-//                         <button key={l.label} onClick={() => navigate(l.path)}
-//                             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
-//                                 active === l.label ? "bg-indigo-50 text-indigo-600" : "text-gray-500 hover:text-indigo-600"
-//                             }`}>
-//                             {l.label}
-//                         </button>
-//                     ))}
-//                 </div>
-//             </div>
-//             <div className="flex items-center gap-3">
-//                 <div className={`w-7 h-7 rounded-full ${avatar.bg} ${avatar.text} text-[11px] font-bold flex items-center justify-center`}>
-//                     {getInitials(user?.username || "U")}
-//                 </div>
-//                 <span className="text-sm font-medium text-gray-700">{user?.username}</span>
-//                 <span className="text-[11px] px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full font-medium">Member</span>
-//                 <button onClick={() => { logout(); navigate("/login"); }} className="text-sm text-gray-400 hover:text-red-500 transition">Sign out</button>
-//             </div>
-//         </nav>
-//     );
-// }
-
 export default function MyFines() {
     const navigate = useNavigate();
     const { user } = useAuthStore();
@@ -97,7 +50,7 @@ export default function MyFines() {
 
     const { data, isLoading } = useQuery({
         queryKey: ["my-fines", user?._id, filter, page],
-        queryFn:  () => getMyFines(user?._id, page),
+        queryFn:  () => getMyFines(user?._id, page, filter === "all" ? undefined : filter),
         enabled:  !!user?._id,
         keepPreviousData: true,
     });
@@ -106,9 +59,7 @@ export default function MyFines() {
     const pagination     = data?.pagination   ?? {};
     const totalPending   = data?.totalPending ?? 0;
 
-    const filtered = filter === "all"
-        ? allFines
-        : allFines.filter((f) => f.status === filter);
+    const filtered = allFines;
 
     const filterTabs = [
         { key: "all",     label: "All"     },
@@ -122,18 +73,18 @@ export default function MyFines() {
         <div className="min-h-screen bg-gray-50 font-sans">
             <NavBar userType="member" />
 
-            <div className="p-5 max-w-3xl mx-auto flex flex-col gap-5">
+            <div className="p-4 sm:p-5 pb-24 sm:pb-8 max-w-3xl mx-auto flex flex-col gap-5">
 
                 {/* Page header */}
-                <div className="flex items-center justify-between">
-                    <div>
+                <div className="flex items-start sm:items-center justify-between gap-3 min-w-0">
+                    <div className="min-w-0">
                         <h1 className="text-xl font-semibold text-gray-900">My fines</h1>
                         <p className="text-sm text-gray-400 mt-0.5">Your complete fine history</p>
                     </div>
                     {totalPending > 0 && (
-                        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-2">
-                            <span className="text-xs text-red-600">Outstanding</span>
-                            <span className="text-base font-bold text-red-700">{fmtCurrency(totalPending)}</span>
+                        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-3 sm:px-4 py-2 shrink-0">
+                            <span className="text-xs text-red-600 hidden sm:inline">Outstanding</span>
+                            <span className="text-sm sm:text-base font-bold text-red-700">{fmtCurrency(totalPending)}</span>
                         </div>
                     )}
                 </div>
@@ -165,15 +116,17 @@ export default function MyFines() {
                 )}
 
                 {/* Filter tabs */}
-                <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit">
-                    {filterTabs.map((tab) => (
-                        <button key={tab.key} onClick={() => { setFilter(tab.key); setPage(1); }}
-                            className={`px-4 py-1.5 rounded-lg text-sm font-medium cursor-pointer transition ${
-                                filter === tab.key ? "bg-indigo-600 text-white" : "text-gray-500 hover:text-indigo-600"
-                            }`}>
-                            {tab.label}
-                        </button>
-                    ))}
+                <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                    <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit min-w-max">
+                        {filterTabs.map((tab) => (
+                            <button key={tab.key} onClick={() => { setFilter(tab.key); setPage(1); }}
+                                className={`px-4 py-1.5 rounded-lg text-sm font-medium cursor-pointer transition whitespace-nowrap ${
+                                    filter === tab.key ? "bg-indigo-600 text-white" : "text-gray-500 hover:text-indigo-600"
+                                }`}>
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Fines list */}
@@ -242,8 +195,8 @@ export default function MyFines() {
                                         </div>
 
                                         {/* Meta row */}
-                                        <div className="flex items-center justify-between mt-2.5">
-                                            <p className="text-[10px] text-gray-400">
+                                        <div className="flex items-center justify-between mt-2.5 gap-2 min-w-0">
+                                            <p className="text-[10px] text-gray-400 truncate min-w-0">
                                                 {fine.status === "paid"
                                                     ? `Paid on ${fmtDate(fine.paidAt)}`
                                                     : fine.status === "waived"
