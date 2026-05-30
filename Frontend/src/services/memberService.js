@@ -2,6 +2,8 @@ import API from "../api/axios";
 
 export const getMyProfile = async () => API.get("/member/profile").then(r => r.data);
 
+export const getMyRequests = async () => API.get("/member/requests/my").then(r => r.data);
+
 export const getMyIssuedBooks = async (page=1) => API.get(`/issues/my?page=${page}`).then(r => r.data);
 
 export const getMyFines = async (status, page=1) => API.get(`/fines?${status ? `status=${status}&` : ""}page=${page}`).then(r => r.data);
@@ -14,3 +16,5 @@ export const getReadAccess = async (issueId) => API.get(`/issues/read/${issueId}
 export const fetchBookText = async (url) => API.get(`/books/proxy-text?url=${encodeURIComponent(url)}`).then(r => r.data);
 
 export const requestBook = async (bookId) => API.post(`/requests/${ bookId }`).then(r => r.data);
+
+export const returnBook = (issueId) => API.patch(`/issues/${issueId}/return`).then(r => r.data);
