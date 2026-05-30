@@ -26,43 +26,51 @@ const thumbColors = [
 ];
 const getThumb = (title = "") => thumbColors[title.charCodeAt(0) % thumbColors.length];
 
-// ─── Stat strip ───────────────────────────────────────────────────────────────
-function StatStrip({ total, returned, overdue, onTime }) {
-    return (
-        <div className="grid grid-cols-4 gap-3">
-            {[
-                { label: "Total borrowed", value: total,    color: "text-gray-900",    bg: "bg-white",        accent: "border-l-indigo-500" },
-                { label: "Returned",       value: returned, color: "text-teal-700",    bg: "bg-teal-50",      accent: "border-l-teal-500"   },
-                { label: "On time",        value: onTime,   color: "text-green-700",   bg: "bg-green-50",     accent: "border-l-green-500"  },
-                { label: "Late returns",   value: overdue,  color: "text-red-600",     bg: "bg-red-50",       accent: "border-l-red-500"    },
-            ].map((s) => (
-                <div key={s.label} className={`${s.bg} border border-gray-200 border-l-4 ${s.accent} rounded-xl p-4`}>
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1.5">{s.label}</p>
-                    <p className={`text-2xl font-bold ${s.color}`}>{s.value === undefined ? "—" : s.value}</p>
-                </div>
-            ))}
-        </div>
-    );
-}
-
 // ─── Single history card ──────────────────────────────────────────────────────
 function HistoryCard({ issue, index }) {
     const title      = issue.bookSnapshot?.title  || issue.book?.title  || "Unknown";
     const author     = issue.bookSnapshot?.author || issue.book?.author || "";
     const thumbColor = getThumb(title);
-    // const isOverdue  = issue.status === "overdue";
-    const isReturned = issue.status === "returned";
-    const isActive   = !isReturned;
-    const duration   = fmtDuration(issue.issueDate || issue.createdAt, issue.returnedAt);
 
-    // was it returned late?
-    const returnedLate = issue.returnedAt && issue.dueDate &&
+    // ── Correct status flags ──────────────────────────────────────────────────
+    const isReturned = issue.status === "returned";
+    const isOverdue  = issue.status === "overdue";
+    const isRejected = issue.status === "rejected";
+    const isPending  = issue.status === "pending";
+    // "Active" = currently with the member (issued or overdue)
+    const isActive   = issue.status === "issued" || issue.status === "active" || isOverdue;
+
+    const duration = fmtDuration(issue.issueDate || issue.createdAt, issue.returnedAt);
+
+    // Was it returned late?
+    const returnedLate = isReturned && issue.returnedAt && issue.dueDate &&
         new Date(issue.returnedAt) > new Date(issue.dueDate);
 
+    // ── Badge ─────────────────────────────────────────────────────────────────
+    const badgeText =
+        isReturned && returnedLate ? "Late return"
+        : isReturned               ? "On time"
+        : isOverdue                ? "Overdue"
+        : isRejected               ? "Rejected"
+        : isPending                ? "Pending"
+        :                            "Active";
+
+    const badgeStyle =
+        isOverdue                  ? "bg-red-100 text-red-700"
+        : isReturned && returnedLate ? "bg-amber-100 text-amber-700"
+        : isReturned               ? "bg-gray-100 text-gray-500"
+        : isRejected               ? "bg-red-100 text-red-600"
+        : isPending                ? "bg-amber-100 text-amber-700"
+        :                            "bg-indigo-100 text-indigo-700";
+
+    const cardBorder =
+        isOverdue   ? "border-red-200"
+        : isActive  ? "border-indigo-200"
+        : isPending ? "border-amber-200"
+        :             "border-gray-200";
+
     return (
-        <div className={`bg-white border rounded-xl overflow-hidden transition hover:shadow-sm ${
-            isActive ? "border-indigo-200" : "border-gray-200"
-        }`}>
+        <div className={`bg-white border rounded-xl overflow-hidden transition hover:shadow-sm ${cardBorder}`}>
             <div className="flex gap-4 p-4">
                 {/* Rank number */}
                 <div className="flex flex-col items-center gap-1 shrink-0 pt-0.5">
@@ -86,49 +94,61 @@ function HistoryCard({ issue, index }) {
                             <h3 className="font-semibold text-gray-900 text-sm truncate leading-snug">{title}</h3>
                             <p className="text-[11px] text-gray-400 mt-0.5">{author}</p>
                         </div>
-                        {/* Status badge */}
-                        <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full shrink-0 ${
-                            isActive
-                                ? "bg-indigo-100 text-indigo-700"
-                                : returnedLate
-                                ? "bg-amber-100 text-amber-700"
-                                : "bg-gray-100 text-gray-500"
-                        }`}>
-                            {isActive ? "Active" : returnedLate ? "Late return" : "On time"}
+                        <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full shrink-0 ${badgeStyle}`}>
+                            {badgeText}
                         </span>
                     </div>
 
                     {/* Date timeline */}
-                    <div className="flex items-center gap-3 mt-2.5 flex-wrap">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-2.5">
                         <div className="flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
                             <span className="text-[11px] text-gray-500">
                                 Borrowed {fmtDate(issue.issueDate || issue.createdAt)}
                             </span>
                         </div>
+
                         {isReturned ? (
                             <>
-                                <span className="text-gray-200 text-xs">→</span>
+                                <span className="text-gray-200 text-xs hidden sm:inline">→</span>
                                 <div className="flex items-center gap-1.5">
-                                    <div className={`w-1.5 h-1.5 rounded-full ${returnedLate ? "bg-amber-400" : "bg-green-400"}`} />
+                                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${returnedLate ? "bg-amber-400" : "bg-green-400"}`} />
                                     <span className="text-[11px] text-gray-500">
                                         Returned {fmtDate(issue.returnedAt)}
                                     </span>
                                 </div>
                                 {duration && (
-                                    <>
-                                        <span className="text-gray-200 text-xs">·</span>
-                                        <span className="text-[11px] text-gray-400">{duration}</span>
-                                    </>
+                                    <span className="text-[11px] text-gray-400 pl-3 sm:pl-0">· {duration}</span>
                                 )}
                             </>
-                        ) : (
+                        ) : isRejected ? (
                             <>
-                                <span className="text-gray-200 text-xs">→</span>
+                                <span className="text-gray-200 text-xs hidden sm:inline">→</span>
                                 <div className="flex items-center gap-1.5">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-300 animate-pulse" />
-                                    <span className="text-[11px] text-indigo-600 font-medium">
-                                        Due {fmtDate(issue.dueDate)}
+                                    <div className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                                    <span className="text-[11px] text-red-500">
+                                        Rejected {fmtDate(issue.updatedAt || issue.createdAt)}
+                                    </span>
+                                </div>
+                            </>
+                        ) : isPending ? (
+                            <>
+                                <span className="text-gray-200 text-xs hidden sm:inline">→</span>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                                    <span className="text-[11px] text-amber-600 font-medium">
+                                        Awaiting approval
+                                    </span>
+                                </div>
+                            </>
+                        ) : (
+                            // Active / overdue — show due date
+                            <>
+                                <span className="text-gray-200 text-xs hidden sm:inline">→</span>
+                                <div className="flex items-center gap-1.5">
+                                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isOverdue ? "bg-red-400" : "bg-indigo-300 animate-pulse"}`} />
+                                    <span className={`text-[11px] font-medium ${isOverdue ? "text-red-600" : "text-indigo-600"}`}>
+                                        {isOverdue ? `Overdue since ${fmtDate(issue.dueDate)}` : `Due ${fmtDate(issue.dueDate)}`}
                                     </span>
                                 </div>
                             </>
@@ -165,10 +185,13 @@ function SkeletonCard() {
 export default function MemberHistory() {
     const navigate = useNavigate();
 
-    const [filter,      setFilter]      = useState("all");    // all | returned | active
-    const [sortBy,      setSortBy]      = useState("newest"); // newest | oldest | az
+    const [filter,      setFilter]      = useState("all");
+    const [sortBy,      setSortBy]      = useState("newest");
     const [searchInput, setSearchInput] = useState("");
     const [page,        setPage]        = useState(1);
+
+    const handleSetFilter = (val) => { setFilter(val); setPage(1); };
+    const handleSetSort   = (val) => { setSortBy(val);  setPage(1); };
 
     const { data, isLoading } = useQuery({
         queryKey: ["my-history", page],
@@ -180,12 +203,20 @@ export default function MemberHistory() {
     const pagination = data?.pagination ?? {};
 
     // ── Derived stats ─────────────────────────────────────────────────────────
-    const returned   = allIssues.filter((i) => i.status === "returned");
-    const active     = allIssues.filter((i) => i.status !== "returned");
-    const overdue    = allIssues.filter((i) => i.status === "overdue");
-    const onTime     = returned.filter((i) =>
+    // Fix: "active" = genuinely with the member right now (issued/active/overdue)
+    // "returned" = handed back; everything else (rejected, pending) is also not "returned"
+    const returned = allIssues.filter((i) => i.status === "returned");
+    const active   = allIssues.filter((i) =>
+        i.status === "issued" || i.status === "active" || i.status === "overdue"
+    );
+    // const overdue  = allIssues.filter((i) => i.status === "overdue");
+    const onTime   = returned.filter((i) =>
         i.returnedAt && i.dueDate &&
         new Date(i.returnedAt) <= new Date(i.dueDate)
+    );
+    const lateReturns = returned.filter((i) =>
+        i.returnedAt && i.dueDate &&
+        new Date(i.returnedAt) > new Date(i.dueDate)
     );
 
     // ── Filter ────────────────────────────────────────────────────────────────
@@ -221,34 +252,33 @@ export default function MemberHistory() {
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
-            <NavBar userType="member" /> 
+            <NavBar userType="member" />
 
-            <div className="p-5 max-w-3xl mx-auto flex flex-col gap-5">
+            <div className="p-4 sm:p-5 pb-24 sm:pb-8 max-w-3xl mx-auto flex flex-col gap-5">
 
                 {/* Page header */}
-                <div className="flex items-center justify-between">
-                    <div>
+                <div className="flex items-center justify-between gap-3 min-w-0">
+                    <div className="min-w-0">
                         <h1 className="text-xl font-semibold text-gray-900">Borrow history</h1>
-                        <p className="text-sm text-gray-400 mt-0.5">
+                        <p className="text-sm text-gray-400 mt-0.5 truncate">
                             Every book you've borrowed — {allIssues.length} total
                         </p>
                     </div>
                     <button onClick={() => navigate("/member/dashboard")}
-                        className="text-sm text-gray-400 cursor-pointer hover:text-indigo-600 transition flex items-center gap-1">
+                        className="text-sm text-gray-400 cursor-pointer hover:text-indigo-600 transition flex items-center gap-1 shrink-0">
                         <MdChevronLeft size={18} />
-                        Dashboard
+                        <span className="hidden sm:inline">Dashboard</span>
                     </button>
                 </div>
 
                 {/* Stat strip */}
                 {!isLoading && (
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {[
-                            { label: "Total borrowed", value: allIssues.length, color: "text-gray-900",  bg: "bg-white",    accent: "border-l-indigo-500" },
-                            { label: "Returned",       value: returned.length,  color: "text-teal-700", bg: "bg-teal-50",  accent: "border-l-teal-500"   },
-                            { label: "On time",        value: onTime.length,    color: "text-green-700",bg: "bg-green-50", accent: "border-l-green-500"  },
-                            { label: "Late returns",   value: overdue.length + returned.filter(i => i.returnedAt && i.dueDate && new Date(i.returnedAt) > new Date(i.dueDate)).length,
-                              color: "text-red-600",   bg: "bg-red-50",   accent: "border-l-red-500" },
+                            { label: "Total borrowed", value: allIssues.length, color: "text-gray-900",   bg: "bg-white",    accent: "border-l-indigo-500" },
+                            { label: "Returned",       value: returned.length,  color: "text-teal-700",  bg: "bg-teal-50",  accent: "border-l-teal-500"   },
+                            { label: "On time",        value: onTime.length,    color: "text-green-700", bg: "bg-green-50", accent: "border-l-green-500"  },
+                            { label: "Late returns",   value: lateReturns.length, color: "text-red-600", bg: "bg-red-50",   accent: "border-l-red-500"    },
                         ].map((s) => (
                             <div key={s.label} className={`${s.bg} border border-gray-200 border-l-4 ${s.accent} rounded-xl p-4`}>
                                 <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1.5">{s.label}</p>
@@ -259,38 +289,40 @@ export default function MemberHistory() {
                 )}
 
                 {/* Filters row */}
-                <div className="flex items-center gap-2 flex-wrap">
-                    {/* Filter tabs */}
-                    <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1">
-                        {[
-                            { key: "all",      label: `All (${allIssues.length})`    },
-                            { key: "active",   label: `Active (${active.length})`    },
-                            { key: "returned", label: `Returned (${returned.length})` },
-                        ].map((tab) => (
-                            <button key={tab.key} onClick={() => setFilter(tab.key)}
-                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
-                                    filter === tab.key
-                                        ? "bg-indigo-600 text-white"
-                                        : "text-gray-500 hover:text-indigo-600"
-                                }`}>
-                                {tab.label}
-                            </button>
-                        ))}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    {/* Filter tabs — scrollable on mobile */}
+                    <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                        <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit min-w-max">
+                            {[
+                                { key: "all",      label: `All (${allIssues.length})`    },
+                                { key: "active",   label: `Active (${active.length})`    },
+                                { key: "returned", label: `Returned (${returned.length})` },
+                            ].map((tab) => (
+                                <button key={tab.key} onClick={() => handleSetFilter(tab.key)}
+                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap ${
+                                        filter === tab.key
+                                            ? "bg-indigo-600 text-white"
+                                            : "text-gray-500 hover:text-indigo-600"
+                                    }`}>
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     {/* Sort */}
                     <select
                         value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                        className="text-sm border border-gray-200 rounded-xl px-3 py-2 bg-white text-gray-600 outline-none focus:border-indigo-400 transition"
+                        onChange={(e) => handleSetSort(e.target.value)}
+                        className="text-sm border border-gray-200 rounded-xl px-3 py-2 bg-white text-gray-600 outline-none focus:border-indigo-400 transition shrink-0"
                     >
                         <option value="newest">Newest first</option>
                         <option value="oldest">Oldest first</option>
                         <option value="az">A → Z</option>
                     </select>
 
-                    {/* Search */}
-                    <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 flex-1 min-w-45">
+                    {/* Search — full width on mobile */}
+                    <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 flex-1 min-w-0">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
                             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                         </svg>
@@ -298,10 +330,10 @@ export default function MemberHistory() {
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
                             placeholder="Search title or author..."
-                            className="text-sm outline-none bg-transparent text-gray-700 flex-1"
+                            className="text-sm outline-none bg-transparent text-gray-700 flex-1 min-w-0"
                         />
                         {searchInput && (
-                            <button onClick={() => setSearchInput("")} className="text-gray-300 hover:text-gray-500 transition text-xs">✕</button>
+                            <button onClick={() => setSearchInput("")} className="text-gray-300 hover:text-gray-500 transition text-xs shrink-0">✕</button>
                         )}
                     </div>
                 </div>

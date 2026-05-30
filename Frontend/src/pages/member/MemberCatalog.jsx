@@ -41,11 +41,71 @@ function SkeletonRow() {
     );
 }
 
+// ─── Skeleton card (mobile / tablet) ─────────────────────────────────────────
+function SkeletonCard() {
+    return (
+        <div className="p-4 border-b border-gray-100 animate-pulse">
+            <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex-1 min-w-0">
+                    <div className="h-3 bg-gray-100 rounded w-40 mb-2" />
+                    <div className="h-2.5 bg-gray-100 rounded w-28 mb-1.5" />
+                    <div className="h-2.5 bg-gray-100 rounded w-20" />
+                </div>
+                <div className="h-5 bg-gray-100 rounded-full w-14 shrink-0" />
+            </div>
+            <div className="flex items-center justify-between">
+                <div className="h-4 bg-gray-100 rounded-full w-20" />
+                <div className="h-8 bg-gray-100 rounded-md w-20" />
+            </div>
+        </div>
+    );
+}
+
+// ─── Book card (mobile / tablet) ──────────────────────────────────────────────
+function BookCard({ book, onRequest }) {
+    return (
+        <div className="p-4 border-b border-gray-100 last:border-0">
+            {/* Top: title + genre badge */}
+            <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="flex-1 min-w-0">
+                    <div className="font-medium text-gray-900 text-sm leading-snug truncate">
+                        {book.title}
+                    </div>
+                    <div className="text-sm text-gray-500 mt-0.5 truncate">{book.author}</div>
+                    {book.isbn && (
+                        <div className="text-[11px] text-gray-400 font-mono mt-0.5">{book.isbn}</div>
+                    )}
+                </div>
+                {book.bookshelves?.[0] && (
+                    <span className="shrink-0 text-[11px] px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full font-medium">
+                        {book.bookshelves[0]}
+                    </span>
+                )}
+            </div>
+
+            {/* Bottom: availability + request button */}
+            <div className="flex items-center justify-between mt-3">
+                <AvailabilityPill available={book.availableCopies} total={book.totalCopies} />
+                <button
+                    onClick={() => onRequest(book)}
+                    className="text-xs px-3 py-1.5 border border-gray-200 rounded-md text-gray-600 hover:border-indigo-400 cursor-pointer hover:text-indigo-600 transition font-medium"
+                >
+                    Request
+                </button>
+            </div>
+        </div>
+    );
+}
+
 // ─── Request Book Modal ───────────────────────────────────────────────────────
 function RequestModal({ book, onClose, onConfirm, isRequesting }) {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm sm:px-4">
+            <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-sm p-6 text-center">
+                {/* Drag handle — mobile only */}
+                <div className="flex justify-center -mt-2 mb-4 sm:hidden">
+                    <div className="w-10 h-1 rounded-full bg-gray-200" />
+                </div>
                 <h3 className="text-base font-semibold text-gray-900 mb-1">Request "{book?.title}"?</h3>
                 <p className="text-sm text-gray-500 mb-5">
                     Are you sure you want to request this book?
@@ -121,7 +181,7 @@ export default function MemberCatalog() {
 
             {/* Toast */}
             {toast && (
-                <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl text-sm font-medium shadow-lg transition ${
+                <div className={`fixed bottom-4 left-4 right-4 sm:bottom-auto sm:top-4 sm:left-auto sm:right-4 sm:max-w-sm z-50 px-4 py-3 rounded-xl text-sm font-medium shadow-lg transition ${
                     toast.type === "error"
                         ? "bg-red-50 border border-red-200 text-red-700"
                         : "bg-green-50 border border-green-200 text-green-700"
@@ -130,7 +190,7 @@ export default function MemberCatalog() {
                 </div>
             )}
 
-            <div className="p-5 max-w-350 mx-auto flex flex-col gap-4">
+            <div className="p-4 sm:p-5 pb-24 sm:pb-8 max-w-7xl mx-auto flex flex-col gap-4">
 
                 {/* Page header */}
                 <div className="flex items-center justify-between">
@@ -167,8 +227,8 @@ export default function MemberCatalog() {
                     )}
                 </form>
 
-                {/* Table */}
-                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                {/* ── Desktop table (lg+) ── */}
+                <div className="hidden lg:block bg-white border border-gray-200 rounded-xl overflow-hidden">
                     <table className="w-full text-sm border-collapse">
                         <thead>
                             <tr className="bg-gray-50">
@@ -305,6 +365,56 @@ export default function MemberCatalog() {
                         </div>
                     )}
                 </div>
+
+                {/* ── Mobile & Tablet card list (< lg) ── */}
+                <div className="lg:hidden bg-white border border-gray-200 rounded-xl overflow-hidden">
+                    {isLoading
+                        ? Array(6).fill(0).map((_, i) => <SkeletonCard key={i} />)
+                        : books.length === 0
+                        ? (
+                            <div className="py-16 flex flex-col items-center gap-2">
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-200">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                                </svg>
+                                <span className="text-sm text-gray-400">
+                                    {searchQuery ? `No books found for "${searchQuery}"` : "No books in catalog yet"}
+                                </span>
+                            </div>
+                        )
+                        : books.map((book) => (
+                            <BookCard
+                                key={book._id}
+                                book={book}
+                                onRequest={setModalBook}
+                            />
+                        ))
+                    }
+
+                    {pagination.totalPages > 1 && (
+                        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+                            <span className="text-xs text-gray-400">
+                                {pagination.page} / {pagination.totalPages} · {pagination.total} books
+                            </span>
+                            <div className="flex gap-1.5">
+                                <button
+                                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                    disabled={!pagination.hasPrev}
+                                    className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition"
+                                >
+                                    ← Prev
+                                </button>
+                                <button
+                                    onClick={() => setPage((p) => p + 1)}
+                                    disabled={!pagination.hasNext}
+                                    className="px-3 py-1.5 text-xs border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition"
+                                >
+                                    Next →
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
             </div>
 
             {/* Request Modal */}
