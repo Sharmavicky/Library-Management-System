@@ -2,6 +2,7 @@ const cron = require("node-cron");
 const Fine = require("../../Models/modelExporter").Fine;
 const Issue = require("../../Models/modelExporter").Issue;
 const User = require("../../Models/modelExporter").User;
+const sendReminderEmail = require("../config/mailer").sendReminderEmail;
 
 const FINE_PER_DAY = 5; // fine per day
 
@@ -108,7 +109,6 @@ const recalculateOpenFines = async (now) => {
     return updatedCount;
 }
 
-
 // Log a summary so you can see what happened in your server logs
 const logSummary = (results, durationMs) => {
     const ts = new Date().toISOString();
@@ -141,11 +141,46 @@ const runOverDueJob = async () => {
     }
 }
 
-// SCHEDULE
-// "0 0 * * *" = every day at midnight (server local time)
-// Change to "0 2 * * *" for 2 AM if you want off-peak execution
+// check if any user has an book overdue in within next 3 days and send them a reminder email 
+const sendOverdueReminders = async () => {
+    const now = new Date();
+    const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const issues = await Issue.find({
+        returned: false,
+        dueDate: { $gte: now, $lte: threeDaysFromNow },
+    }).populate("member", "email username").select("dueDate member");
+
+    for (const issue of issues) {
+        if (!issue.member?.email) continue; // skip if member or email is missing
+
+        const daysLeft = Math.ceil((issue.dueDate - now) / (1000 * 60 * 60 * 24));
+        const memberName = issue.member.username || "Member";
+        const memberEmail = issue.member.email || "unknown email";
+
+        // send email to issue.member.email with a reminder about the upcoming due date
+        console.log(`Reminder: ${memberName} (${memberEmail}) has an issue due in ${daysLeft} day(s) on ${issue.dueDate.toDateString()}`);
+        
+        try {
+            await sendReminderEmail(memberEmail, memberName, daysLeft, issue.dueDate);
+        } catch (error) {
+            console.error(`Error sending reminder email to ${memberEmail}:`, error.message);
+        }
+    }
+}
+
+/* SCHEDULE
+    "0 0 * * *" = every day at midnight (server local time)
+    Change to "0 2 * * *" for 2 AM if you want off-peak execution
+    Change to "* * * * *" for testing (every minute)
+    Change to "0 9 * * *" for sending reminders every day at 9 AM
+*/
 const startOverdueCron = () => {
-    cron.schedule("0 0 * * *", runOverDueJob, {
+    cron.schedule("0 2 * * *", runOverDueJob, {
+        scheduled: true,
+        timezone:  "Asia/Kolkata"       // server timezone
+    });
+
+    cron.schedule("0 9 * * *", sendOverdueReminders, {
         scheduled: true,
         timezone:  "Asia/Kolkata"       // server timezone
     });
