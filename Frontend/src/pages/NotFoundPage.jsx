@@ -26,13 +26,13 @@ export default function NotFound() {
             </div>
             <div className="w-40 h-1 bg-indigo-600 rounded-full" />
 
-            {/* 404 */}
-            <h1 className="text-[96px] font-bold leading-none tracking-tighter text-indigo-50 mt-6 select-none">
+            {/* 404 — scales down on mobile so it doesn't overflow */}
+            <h1 className="text-[64px] sm:text-[96px] font-bold leading-none tracking-tighter text-indigo-50 mt-6 select-none">
                 4<span className="text-indigo-600">0</span>4
             </h1>
 
             {/* Message */}
-            <h2 className="text-2xl font-semibold text-gray-900 mt-4 mb-2">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mt-4 mb-2">
                 Page not found
             </h2>
             <p className="text-sm text-gray-500 max-w-sm leading-relaxed mb-8">
@@ -41,16 +41,16 @@ export default function NotFound() {
             </p>
 
             {/* Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                 <button
                     onClick={() => navigate(-1)}
-                    className="px-6 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 active:scale-[0.98] transition cursor-pointer"
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 active:scale-[0.98] transition cursor-pointer"
                 >
                     ← Go back
                 </button>
                 <button
                     onClick={() => navigate("/")}
-                    className="px-6 py-2.5 rounded-lg border border-indigo-600 text-indigo-600 text-sm font-semibold active:scale-[0.98] transition cursor-pointer hover:bg-indigo-600 hover:text-white"
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-lg border border-indigo-600 text-indigo-600 text-sm font-semibold active:scale-[0.98] transition cursor-pointer hover:bg-indigo-600 hover:text-white"
                 >
                     Go home
                 </button>

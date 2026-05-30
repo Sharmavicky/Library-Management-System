@@ -9,6 +9,7 @@ import AdminRequests from "./pages/admin/AdminRequests";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import VerifyOTP from "./pages/VerifyOTP";
 
 {/* admin routing files */}
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -35,6 +36,7 @@ export default function App() {
                 <Route path="/" element={ <Landing /> } />
                 <Route path="/login" element={ <Login /> } />
                 <Route path="/register" element={ <Register /> } />
+                <Route path="/verify-otp" element={ <VerifyOTP /> } />
 
                 {/* protected admin route */}
                 <Route path="/admin/dashboard" element={ <AdminRoute><AdminDashboard /></AdminRoute>}/>
