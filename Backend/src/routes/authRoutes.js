@@ -1,14 +1,32 @@
 const express = require("express");
 const router  = express.Router();
-const { registerUser, loginUser, logoutUser, refreshAccessToken } = require("../../controllers/auth-controller");
+
+// Importing necessary functions and middlewares
 const { verifyToken } = require("../middleware/authMiddleWare");
 const validate = require("../middleware/validate");
-const { registerSchema, loginSchema, refreshTokenSchema } = require("../validators/authValidator");
+
+const {
+    registerUser,
+    loginUser,
+    logoutUser,
+    refreshAccessToken,
+    verifyOTP,
+    resendOTP
+} = require("../../controllers/auth-controller");
+
+const {
+    registerSchema,
+    loginSchema,
+    refreshTokenSchema,
+    verifyOTPSchema
+} = require("../validators/authValidator");
 const { authLimiter, refreshTokenLimiter } = require("../middleware/rateLimiter");
 
-router.post("/register", authLimiter, validate(registerSchema),      registerUser);
-router.post("/login",    authLimiter, validate(loginSchema),         loginUser);
-router.post("/logout",   verifyToken,                                logoutUser);
+router.post("/register",    authLimiter,   validate(registerSchema),    registerUser);
+router.post("/verify-otp",  authLimiter,   validate(verifyOTPSchema),   verifyOTP);
+router.post("/resend-otp",  authLimiter,                                resendOTP);
+router.post("/login",       authLimiter,   validate(loginSchema),       loginUser);
+router.post("/logout",      verifyToken,                                logoutUser);
 
 // verifyToken — access token is expired at this point, the refresh token in req.body is the only credential needed
 router.post("/refresh",  refreshTokenLimiter, validate(refreshTokenSchema),  refreshAccessToken);

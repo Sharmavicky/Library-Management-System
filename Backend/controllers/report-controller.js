@@ -57,7 +57,7 @@ exports.getSummary = async (req, res, next) => {
                         totalWaived: {
                             $sum: {
                                 $cond: [
-                                    { $in: ["$status", "waived"] },
+                                    { $in: [ "$status", ["waived"] ] },
                                     "$totalAmount",
                                     0
                                 ]
@@ -76,11 +76,11 @@ exports.getSummary = async (req, res, next) => {
 
             // top 5 most borrowed books of all times
             Issue.aggregate([
-                { $group: { _id: null, totalIssued: { $sum: 1 } } },
+                { $group: { _id: "$book", totalIssued: { $sum: 1 } } },
                 { $sort: { totalIssued: -1 } },
                 { $limit: 5 },
                 { $lookup: {
-                    from : "book", 
+                    from : "books", 
                     localField: "_id",
                     foreignField: "_id",
                     as: "book"

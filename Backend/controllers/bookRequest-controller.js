@@ -46,6 +46,24 @@ exports.requestBook = async (req, res, next) => {
     }
 };
 
+// ── MEMBER: Get all requested books ───────────────────────────────────────────
+exports.getMyRequests = async (req, res, next) => {
+    try {
+        const memberId = req.user._id;
+        const requests = await BookRequest.find({ member: memberId })
+            .populate("book", "title author")
+            .sort({ createdAt: -1 }); // newest first
+
+        return res.status(200).json({
+            success: true,
+            message: "Your book requests retrieved successfully",
+            requests
+        })
+    } catch (err) {
+        next(err);
+    }
+}
+
 // ── ADMIN: Get all requests ───────────────────────────────────────────────────
 exports.getAllRequests = async (req, res, next) => {
     try {
