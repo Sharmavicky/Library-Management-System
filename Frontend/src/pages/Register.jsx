@@ -154,11 +154,14 @@ export default function RegisterPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+
         if (password !== confirmPassword) { setError("Passwords do not match."); return; }
         if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
         setLoading(true);
+
         try {
             const data = await registerUser(username, email, password);
+            
             if (data.requiredVerification) {
                 navigate("/verify-otp", { state: { email: data.email } });
             } else {
