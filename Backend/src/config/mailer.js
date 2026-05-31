@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 
-const transporter = nodemailer.createTransport({
+const getTransporter = () => nodemailer.createTransport({
     service: "gmail",
     auth: {
         user: process.env.EMAIL_USER,  // your gmail address
@@ -9,6 +9,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendOTPEmail = async (toEmail, otp) => {
+    const transporter = getTransporter();
     const info = await transporter.sendMail({
         from:    `"ReadMatrix" <${process.env.EMAIL_USER}>`,
         to:      toEmail,
@@ -43,6 +44,7 @@ const sendOTPEmail = async (toEmail, otp) => {
 };
 
 const sendReminderEmail = async (toEmail, username, daysLeft, dueDate) => {
+    const transporter = getTransporter();
     await transporter.sendMail({
         from:    `"ReadMatrix" <${process.env.EMAIL_USER}>`,
         to:      toEmail,
