@@ -1,103 +1,176 @@
-# Library Management System
+# 📚 Library Management System
 
-A full-stack library management application with role-based authentication, book inventory management, issue/return tracking, and admin/member dashboards.
+A comprehensive, full-stack Library Management System built with the MERN stack (MongoDB, Express.js, React, Node.js). This system is designed to streamline library operations, offering distinct role-based access for both Administrators and Members. It encompasses everything from book inventory management and issuance tracking to fine calculations, automated overdue jobs, and analytical reports.
 
-## 🔎 Features
+---
 
-- User registration, login, logout, and token refresh
-- Role-based access: Admin and Member
-- Book catalog browsing and search by title or author
-- Admin book management: update and delete book records
-- Issue and return workflow for borrowing books
-- Member profile and issue history
-- Redis-backed session management for secure authentication
+## 🌟 Key Features
 
-## 🧱 Tech Stack
+### 👨‍💼 Administrator Features
+- **Dashboard & Analytics:** Visual insights and real-time statistics (powered by Chart.js).
+- **Book Inventory Management:** Add, update, delete, and categorize books.
+- **Member Management:** View, approve, or manage library member accounts.
+- **Issue & Return Tracking:** Manage book loans, track due dates, and process returns.
+- **Fine Management:** Automated fine calculations for overdue books.
+- **Reports:** Generate and view library activity reports.
 
-- Backend: Node.js, Express, MongoDB, Mongoose, Redis
-- Frontend: React, Vite, Tailwind CSS, React Router, Axios
-- Validation: Zod
-- Session management: express-session + connect-redis
+### 👤 Member Features
+- **Personalized Dashboard:** Track currently borrowed books, history, and active fines.
+- **Book Catalog & Search:** Browse the library's collection with search and filtering capabilities.
+- **Book Requests:** Request to borrow books directly through the platform.
+- **Fines & History:** View detailed history of past issuances and outstanding fines.
 
-## 📁 Project Structure
+### ⚙️ Core System Features
+- **Authentication & Authorization:** Secure, role-based JWT & Redis-backed session management. Includes OTP-based email verification.
+- **Automated Background Jobs:** Cron jobs designed to automatically flag overdue books and apply fines.
+- **Security:** Helmet, rate limiting, and MongoDB sanitization against NoSQL injection.
+- **Caching & Performance:** Redis integration for rapid session and token management.
 
-- `Backend/`
-  - `index.js` — Express server entry point
-  - `src/routes/` — API route definitions
-  - `controllers/` — Route handlers and business logic
-  - `Models/` — Mongoose schema definitions
-  - `src/config/` — MongoDB and Redis connection setup
-  - `src/middleware/` — Authentication and error handling middleware
-  - `src/validators/` — Request validation logic
-  - `src/scripts/seedBooks.js` — Sample data seeding script
+---
 
-- `Frontend/`
-  - `src/` — React application source
-  - `src/pages/` — App pages and views
-  - `src/Components/` — UI components
-  - `src/services/` — API service modules
-  - `src/api/axios.js` — Axios configuration
+## 🛠️ Tech Stack
 
-## 🚀 Setup
+### Frontend
+- **Framework:** React 19 (via Vite)
+- **Styling:** Tailwind CSS v4
+- **State Management:** Zustand
+- **Data Fetching:** TanStack React Query + Axios
+- **Routing:** React Router v7
+- **UI Components & Icons:** Chart.js, react-chartjs-2, react-icons
 
-### 1. Backend
+### Backend
+- **Runtime & Framework:** Node.js, Express.js (v5)
+- **Database:** MongoDB (with Mongoose ORM)
+- **Caching & Sessions:** Redis, `express-session`, `connect-redis`
+- **Authentication:** `jsonwebtoken` (JWT), `bcrypt`
+- **Validation:** Zod schemas
+- **Task Scheduling:** `node-cron`
+- **Email Services:** `nodemailer`, `deep-email-validator`
+- **Security:** `helmet`, `express-rate-limit`, `express-mongo-sanitize`
 
+---
+
+## 📁 Architecture & Project Structure
+
+```text
+Library-Management-System/
+├── Backend/
+│   ├── index.js                  # Entry point for the Express backend
+│   ├── controllers/              # Business logic (Auth, Books, Fines, Issues, Reports, etc.)
+│   ├── Models/                   # Mongoose schemas (Book, User, Issue, Fine, etc.)
+│   ├── src/
+│   │   ├── config/               # DB, Redis, Mailer configurations
+│   │   ├── jobs/                 # node-cron scheduled jobs (e.g., OverDueJob)
+│   │   ├── middleware/           # Auth, Error handlers, Rate limiters
+│   │   ├── routes/               # Express API blueprints
+│   │   ├── validators/           # Zod validation schemas
+│   │   └── scripts/              # DB seeding scripts
+│   └── utils/                    # Helpers (OTP, Pagination, Token Cache)
+│
+└── Frontend/
+    ├── index.html
+    ├── src/
+    │   ├── api/                  # Axios configuration
+    │   ├── Components/           # Reusable UI components (Nav, Sidebar, ProtectedRoute)
+    │   ├── pages/                # Views (Login, Register, OTP)
+    │   │   ├── admin/            # Admin-specific pages (Dashboard, Books, Fines)
+    │   │   └── member/           # Member-specific pages (Catalog, Reader, History)
+    │   ├── services/             # API request wrappers
+    │   └── store/                # Zustand global state (AuthStore)
+    └── vite.config.js
+```
+
+---
+
+## 🚀 Setup & Installation
+
+### 1. Prerequisites
+Ensure you have the following installed on your machine:
+- [Node.js](https://nodejs.org/en/) (v18 or higher recommended)
+- [MongoDB](https://www.mongodb.com/try/download/community) (Local or Atlas URI)
+- [Redis](https://redis.io/download/) (running locally on port 6379, or a cloud instance)
+
+### 2. Backend Setup
 ```bash
 cd Backend
 npm install
 ```
 
-Create a `.env` file in `Backend/` with the following variables:
-
+Create a `.env` file in the `Backend/` directory and configure your environment variables:
 ```env
+# Server
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/library-management
-REDIS_URL=redis://localhost:6379
-SESSION_SECRET=your-session-secret
+
+# Database
+MONGODB_URI=mongodb://127.0.0.1:27017/library-management
+
+# Redis
+REDIS_URL=redis://127.0.0.1:6379
+
+# Security & Sessions
+SESSION_SECRET=your_super_secret_session_key
+JWT_SECRET=your_jwt_secret_key
+
+# Email (For nodemailer)
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_email_app_password
 ```
 
-Start the backend server:
-
+**Start the Backend Server:**
 ```bash
+# For development
 npm run dev
-```
 
-Optional: Seed initial books data:
-
-```bash
+# To seed the database with initial book data
 npm run seed
 ```
 
-### 2. Frontend
-
+### 3. Frontend Setup
 ```bash
 cd Frontend
 npm install
+```
+
+*(Optional)* Create a `.env` file in the `Frontend/` directory to store API URLs if they differ from defaults (e.g., `VITE_API_URL=http://localhost:5000/api`).
+
+**Start the Frontend Server:**
+```bash
 npm run dev
 ```
 
-The frontend is developed to run on `http://localhost:5173` and communicates with the backend API.
+The frontend will run on `http://localhost:5173` and will communicate with the backend running on `http://localhost:5000`.
+
+---
 
 ## 📌 Available Scripts
 
-### Backend
+### Backend (`/Backend`)
+- `npm run dev` ⎯ Starts the development server using `nodemon`.
+- `npm run start` ⎯ Starts the production server.
+- `npm run seed` ⎯ Populates the database with sample book records.
 
-- `npm run dev` — start the backend with `nodemon`
-- `npm run start` — run the backend once with Node
-- `npm run seed` — populate sample book data
+### Frontend (`/Frontend`)
+- `npm run dev` ⎯ Starts the Vite development server.
+- `npm run build` ⎯ Compiles the app into static files for production.
+- `npm run preview` ⎯ Serves the production build locally.
+- `npm run lint` ⎯ Runs ESLint to check for code quality issues.
 
-### Frontend
+---
 
-- `npm run dev` — start the local Vite development server
-- `npm run build` — build the production frontend
-- `npm run preview` — preview the production build
-- `npm run lint` — run ESLint on frontend files
+## 🛡️ Security Highlights
+- **Request Validations:** Using Zod ensures only strictly typed data enters the backend flow.
+- **Rate Limiting:** Protects exposed API endpoints from brute-force and DDoS attacks.
+- **Sanitization:** Protects MongoDB against NoSQL Injection via `express-mongo-sanitize`.
+- **HTTP Headers:** Secures responses utilizing `helmet`.
+- **OTP Verification:** Ensures emails are verified via `deep-email-validator` and standard 6-digit OTPs.
 
-## 🔗 API Overview
+---
 
-- `POST /api/auth/register` — register a new user
-- `POST /api/auth/login` — login and receive session
-- `POST /api/auth/logout` — logout authenticated user
+## 👨‍💻 Author
+
+**Vicky Sharma**
+- GitHub: [@Sharmavicky](https://github.com/Sharmavicky)
+
 - `POST /api/auth/refresh` — refresh authentication token
 - `GET /api/books` — list all books
 - `GET /api/books/search?query=` — search books
