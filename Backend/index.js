@@ -70,6 +70,7 @@ app.get("/", (req, res) => {
         success: true,
         message: "Welcome to the Library Management System"
     });
+    console.log("Landing page accessed"); // log when landing page is hit
 });
 
 // ── API routes ────────────────────────────────────────────────────────────────
