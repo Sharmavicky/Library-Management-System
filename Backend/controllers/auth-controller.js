@@ -28,16 +28,11 @@ exports.registerUser = async (req, res, next) => {
         }
 
         // validate email format
-        const isValidEmail = await validate(email);
-        const failedCheck = isValidEmail.validators;
-
-        const formatFailed = failedCheck?.regex?.valid === false 
-                  || failedCheck?.typo?.valid === false;
-
-        if (formatFailed) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
             return res.status(400).json({
                 success: false,
-                message: "Email format is invalid!!"
+                message: "Invalid email format!!"
             })
         }
 
