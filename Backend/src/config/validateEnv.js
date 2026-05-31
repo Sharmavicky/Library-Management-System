@@ -7,7 +7,9 @@ const validateEnv = () => {
         "PORT",
         "NODE_ENV",
         "EMAIL_USER",
-        "EMAIL_PASS"
+        "EMAIL_PASS",
+        "SESSION_SECRET",
+        "CLIENT_URL"
     ];
 
     const missing = required.filter(key => !process.env[key]);
