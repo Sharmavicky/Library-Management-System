@@ -120,7 +120,7 @@ export default function VerifyOTP() {
             {/* ── NAVBAR ── */}
             <nav className="sticky top-0 z-20 flex items-center justify-between px-6 sm:px-10 h-12 bg-white border-b border-[#e0e7ff]">
                 <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 16, fontWeight: 700, color: "#4f46e5" }}>
-                    LibraryOS
+                    ReadMatrix
                 </span>
                 <button
                     onClick={() => navigate("/")}
@@ -170,7 +170,7 @@ export default function VerifyOTP() {
                                 <span style={{ color: "#a5b4fc" }}>inbox</span>
                             </h2>
                             <p style={{ fontSize: 13, color: "#c7d2fe", lineHeight: 1.75, maxWidth: 280 }}>
-                                We sent a 6-digit verification code to your email. Enter it to activate your LibraryOS account.
+                                We sent a 6-digit verification code to your email. Enter it to activate your ReadMatrix account.
                             </p>
                         </div>
 
@@ -363,8 +363,8 @@ export default function VerifyOTP() {
 
             {/* ── FOOTER ── */}
             <footer className="flex items-center justify-between px-6 sm:px-10 h-11 bg-white border-t border-[#e0e7ff]">
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#4f46e5", fontFamily: "'DM Serif Display', serif" }}>LibraryOS</span>
-                <span style={{ fontSize: 10, color: "#9ca3af" }}>© 2026 LibraryOS. Built for librarians.</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#4f46e5", fontFamily: "'DM Serif Display', serif" }}>ReadMatrix</span>
+                <span style={{ fontSize: 10, color: "#9ca3af" }}>© 2026 ReadMatrix. Built for librarians.</span>
             </footer>
         </div>
     );

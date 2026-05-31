@@ -147,7 +147,7 @@ export default function NavBar({ userType = "admin" }) {
             ══════════════════════════════════════════════════════════════ */}
             <nav className="hidden md:flex bg-white border-b border-gray-200 px-6 py-3 items-center justify-between sticky top-0 z-10">
                 <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold text-indigo-600">LibraryOS</span>
+                    <span className="text-lg font-bold text-indigo-600">ReadMatrix</span>
                     <span className="text-gray-300">|</span>
                     <span className="text-sm text-gray-500">
                         {isAdmin ? "Admin dashboard" : "Member dashboard"}
@@ -191,7 +191,7 @@ export default function NavBar({ userType = "admin" }) {
             ══════════════════════════════════════════════════════════════ */}
             <div className="flex md:hidden items-center justify-between px-4 py-3 bg-white border-b border-gray-200 sticky top-0 z-10">
                 <div className="flex items-center gap-2">
-                    <span className="text-base font-bold text-indigo-600">LibraryOS</span>
+                    <span className="text-base font-bold text-indigo-600">ReadMatrix</span>
                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                         isAdmin
                             ? "bg-indigo-50 text-indigo-600"
