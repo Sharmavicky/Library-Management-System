@@ -29,10 +29,15 @@ exports.registerUser = async (req, res, next) => {
 
         // validate email format
         const isValidEmail = await validate(email);
-        if (!isValidEmail.valid) {
+        const failedCheck = isValidEmail.validators;
+
+        const formatFailed = failedCheck?.regex?.valid === false 
+                  || failedCheck?.typo?.valid === false;
+
+        if (formatFailed) {
             return res.status(400).json({
                 success: false,
-                message: "Email is invalid or does not exist!!"
+                message: "Email format is invalid!!"
             })
         }
 
