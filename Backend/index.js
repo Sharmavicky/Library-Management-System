@@ -1,4 +1,5 @@
 require("dotenv").config();
+console.log(`MongoDb URI: ${process.env.MONGODB_URI}`);
 const validateEnv = require("./src/config/validateEnv");
 validateEnv(); // validate env variables before anything else
 
