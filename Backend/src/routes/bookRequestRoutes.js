@@ -7,7 +7,7 @@ const {
     rejectRequest,
     getMyRequests
 } = require("../../controllers/bookRequest-controller.js");
-const { verifyToken, isAdmin }  = require("../middleware/authMiddleware.js");
+const { verifyToken, isAdmin }  = require("../middleware/authMiddleWare");
 
 // Member routes
 router.get("/my",                verifyToken,          getMyRequests);   // GET  /api/requests/my
