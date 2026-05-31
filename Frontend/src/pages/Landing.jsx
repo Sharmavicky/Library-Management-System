@@ -89,7 +89,7 @@ export default function LandingPage() {
 
             {/* ── Navbar ── */}
             <nav className="flex items-center justify-between px-4 sm:px-8 md:px-12 py-4 bg-white border-b border-indigo-100">
-                <span className="text-xl font-bold text-indigo-600">LibraryOS</span>
+                <span className="text-xl font-bold text-indigo-600">ReadMatrix</span>
                 <div className="flex items-center gap-2 sm:gap-3">
                     <button
                         onClick={() => navigate("/login")}
@@ -119,7 +119,7 @@ export default function LandingPage() {
                         <span className="text-indigo-600">managed smarter</span>
                     </h1>
                     <p className="text-sm sm:text-base text-gray-500 leading-relaxed mb-8">
-                        LibraryOS brings your entire collection, members, and fine management
+                        ReadMatrix brings your entire collection, members, and fine management
                         into one clean dashboard — built for librarians who want clarity, not complexity.
                     </p>
                     <div className="flex flex-wrap justify-center lg:justify-start gap-3">
@@ -213,7 +213,7 @@ export default function LandingPage() {
                 <p className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-2">Features</p>
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-indigo-950 mb-2">Everything you need to run a library</h2>
                 <p className="text-sm text-gray-500 mb-8 sm:mb-10 max-w-lg leading-relaxed">
-                    From cataloguing to fine collection, LibraryOS handles the full lifecycle of your library operations.
+                    From cataloguing to fine collection, ReadMatrix handles the full lifecycle of your library operations.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                     {features.map((f) => (
@@ -235,7 +235,7 @@ export default function LandingPage() {
                         Ready to modernise your library?
                     </h2>
                     <p className="text-sm text-indigo-300 mt-2">
-                        Join hundreds of libraries already using LibraryOS to manage their collections.
+                        Join hundreds of libraries already using ReadMatrix to manage their collections.
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-3 shrink-0 w-full sm:w-auto">
@@ -256,8 +256,8 @@ export default function LandingPage() {
 
             {/* ── Footer ── */}
             <footer className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 sm:px-8 md:px-12 py-5 bg-white border-t border-indigo-100">
-                <span className="text-base font-bold text-indigo-600">LibraryOS</span>
-                <span className="text-xs text-gray-400">© 2026 LibraryOS. Built for librarians.</span>
+                <span className="text-base font-bold text-indigo-600">ReadMatrix</span>
+                <span className="text-xs text-gray-400">© 2026 ReadMatrix. Built for librarians.</span>
             </footer>
 
         </div>

@@ -78,7 +78,7 @@ export default function LoginPage({ onNavigateRegister }) {
             {/* ── NAVBAR ── */}
             <nav className="sticky top-0 z-20 flex items-center justify-between px-6 sm:px-10 h-12 bg-white border-b border-[#e0e7ff]">
                 <span className="text-sm font-bold text-[#4f46e5]" style={{ fontFamily: "'DM Serif Display', serif", fontSize: "16px" }}>
-                    LibraryOS
+                    ReadMatrix
                 </span>
                 <button
                     onClick={() => navigate("/")}
@@ -165,7 +165,7 @@ export default function LoginPage({ onNavigateRegister }) {
                                 <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#1e1b4b", marginBottom: 3 }}>
                                     Welcome back
                                 </h1>
-                                <p style={{ fontSize: 12, color: "#9ca3af" }}>Sign in to your LibraryOS account</p>
+                                <p style={{ fontSize: 12, color: "#9ca3af" }}>Sign in to your ReadMatrix account</p>
                             </div>
 
                             {/* Error */}
@@ -316,8 +316,8 @@ export default function LoginPage({ onNavigateRegister }) {
 
             {/* ── FOOTER ── */}
             <footer className="flex items-center justify-between px-6 sm:px-10 h-11 bg-white border-t border-[#e0e7ff]">
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#4f46e5", fontFamily: "'DM Serif Display', serif" }}>LibraryOS</span>
-                <span style={{ fontSize: 10, color: "#9ca3af" }}>© 2026 LibraryOS. Built for librarians.</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#4f46e5", fontFamily: "'DM Serif Display', serif" }}>ReadMatrix</span>
+                <span style={{ fontSize: 10, color: "#9ca3af" }}>© 2026 ReadMatrix. Built for librarians.</span>
             </footer>
         </div>
     );

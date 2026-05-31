@@ -190,7 +190,7 @@ export default function RegisterPage() {
             {/* ── NAVBAR ── */}
             <nav className="sticky top-0 z-20 flex items-center justify-between px-6 sm:px-10 h-12 bg-white border-b border-[#e0e7ff]">
                 <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 16, fontWeight: 700, color: "#4f46e5" }}>
-                    LibraryOS
+                    ReadMatrix
                 </span>
                 <button
                     onClick={() => navigate("/")}
@@ -228,7 +228,7 @@ export default function RegisterPage() {
                                 Join <span style={{ color: "#a5b4fc" }}>thousands</span><br />of librarians
                             </h2>
                             <p style={{ fontSize: 12, color: "#818cf8", lineHeight: 1.75, maxWidth: 240 }}>
-                                Set up your LibraryOS account in minutes and start managing your collection the smart way.
+                                Set up your ReadMatrix account in minutes and start managing your collection the smart way.
                             </p>
                         </div>
 
@@ -469,8 +469,8 @@ export default function RegisterPage() {
 
             {/* ── FOOTER ── */}
             <footer className="flex items-center justify-between px-6 sm:px-10 h-11 bg-white border-t border-[#e0e7ff]">
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#4f46e5", fontFamily: "'DM Serif Display', serif" }}>LibraryOS</span>
-                <span style={{ fontSize: 10, color: "#9ca3af" }}>© 2026 LibraryOS. Built for librarians.</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#4f46e5", fontFamily: "'DM Serif Display', serif" }}>ReadMatrix</span>
+                <span style={{ fontSize: 10, color: "#9ca3af" }}>© 2026 ReadMatrix. Built for librarians.</span>
             </footer>
         </div>
     );
