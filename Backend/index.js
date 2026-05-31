@@ -39,7 +39,10 @@ if (process.env.NODE_ENV !== "production") {
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
 app.use(cors({
-    origin:      process.env.CLIENT_URL || "http://localhost:5173",
+    origin:      [
+        process.env.CLIENT_URL || "http://localhost:5173",
+        "https://readmatrix.netlify.app/login"
+    ],
     credentials: true
 }));
 
