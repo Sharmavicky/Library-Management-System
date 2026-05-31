@@ -3,12 +3,6 @@ import { loginUser } from "../services/authService";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
 
-// const quotes = [
-//     { text: "A reader lives a thousand lives before he dies.", author: "George R.R. Martin" },
-//     { text: "Not all those who wander are lost.", author: "J.R.R. Tolkien" },
-//     { text: "It is a truth universally acknowledged…", author: "Jane Austen" },
-// ];
-
 const MailIcon = () => (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
@@ -52,8 +46,6 @@ export default function LoginPage({ onNavigateRegister }) {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [showPass, setShowPass] = useState(false);
-
-    // const quote = quotes[Math.floor(Date.now() / 86400000) % quotes.length];
 
     const handleSubmit = async (e) => {
         e.preventDefault();
