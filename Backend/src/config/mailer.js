@@ -1,15 +1,17 @@
 const nodemailer = require("nodemailer");
 
 const getTransporter = () => nodemailer.createTransport({
-    host: "smtp.gmail.com",
+    host: "74.125.133.108",   // ← Gmail SMTP hardcoded IPv4, bypasses DNS
     port: 465,
-    secure: true,          // use SSL on 465
-    family: 4,            // prefer IPv4
+    secure: true,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
-    connectionTimeout: 10000,   // fail fast after 10s 
+    tls: {
+        servername: "smtp.gmail.com"  // ← still validates SSL cert against gmail
+    },
+    connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 10000,
 });
@@ -48,7 +50,7 @@ const sendOTPEmail = async (toEmail, otp) => {
 
     // check for invalid email and other errors
     if (info.rejected && info.rejected.length > 0) {
-        console.error("❌ sendMail error:", err.message);
+        console.error("❌ sendMail error:", mailErr.message);
         const error = new Error(`Failed to send OTP email to ${toEmail}`);
         error.code = "EMAIL_SEND_FAILURE";
         throw error;
