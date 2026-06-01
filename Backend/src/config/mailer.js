@@ -1,12 +1,10 @@
-const Brevo = require("@getbrevo/brevo");
+const SibApiV3Sdk = require("@getbrevo/brevo");
 
-const client = Brevo.ApiClient.instance;
-client.authentications["api-key"].apiKey = process.env.BREVO_API_KEY;
-
-const transactionalApi = new Brevo.TransactionalEmailsApi();
+const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+apiInstance.authentications["api-key"].apiKey = process.env.BREVO_API_KEY;
 
 const sendOTPEmail = async (toEmail, otp) => {
-    const email = new Brevo.SendSmtpEmail();
+    const email = new SibApiV3Sdk.SendSmtpEmail();
 
     email.sender = { name: "ReadMatrix", email: process.env.EMAIL_USER };
     email.to = [{ email: toEmail }];
@@ -30,7 +28,7 @@ const sendOTPEmail = async (toEmail, otp) => {
     `;
 
     try {
-        const result = await transactionalApi.sendTransacEmail(email);
+        const result = await apiInstance.sendTransacEmail(email);
         console.log("✅ OTP email sent, messageId:", result.messageId);
         return result;
     } catch (err) {
@@ -42,7 +40,7 @@ const sendOTPEmail = async (toEmail, otp) => {
 };
 
 const sendReminderEmail = async (toEmail, username, daysLeft, dueDate) => {
-    const email = new Brevo.SendSmtpEmail();
+    const email = new SibApiV3Sdk.SendSmtpEmail();
 
     email.sender = { name: "ReadMatrix", email: process.env.EMAIL_USER };
     email.to = [{ email: toEmail }];
@@ -63,7 +61,7 @@ const sendReminderEmail = async (toEmail, username, daysLeft, dueDate) => {
     `;
 
     try {
-        await transactionalApi.sendTransacEmail(email);
+        await apiInstance.sendTransacEmail(email);
     } catch (err) {
         console.error("❌ Brevo reminder error:", err.message);
     }
