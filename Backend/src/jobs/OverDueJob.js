@@ -27,7 +27,7 @@ const markOverDueIssues = async (now) => {
 // create missing fines for overdue issues
 const createMissingFines = async (now) => {
     // find all overdue issues that don't have a fine
-    const overdueIssues = await Issue.fine({
+    const overdueIssues = await Issue.find({
         returned: false,
         status: "overdue",
     }).select("_id member dueDate");
@@ -75,12 +75,13 @@ const recalculateOpenFines = async (now) => {
     // bulk write operations to update fines
     const bulkOps = [];
 
+    let updatedCount = 0;
     for (const fine of openFines) {
         if (!fine.issue?.dueDate) continue; // skip if issue or dueDate is missing
 
         // calculate new daysOverDue and totalAmount
         const daysOverDue = calculateDaysOverDue(fine.issue.dueDate, now);
-        const newTotalAmount = daysOverdue * FINE_PER_DAY;
+        const newTotalAmount = daysOverDue * FINE_PER_DAY;
 
         // only update if there's a change in daysOverDue or totalAmount
         if (newTotalAmount === fine.totalAmount) continue;
