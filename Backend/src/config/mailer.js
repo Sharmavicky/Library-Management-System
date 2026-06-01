@@ -1,7 +1,11 @@
 const SibApiV3Sdk = require("@getbrevo/brevo");
 
+// set API key on the default client FIRST
+const defaultClient = SibApiV3Sdk.ApiClient.instance;
+const apiKey = defaultClient.authentications["api-key"];
+apiKey.apiKey = process.env.BREVO_API_KEY;
+
 const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-apiInstance.authentications["api-key"].apiKey = process.env.BREVO_API_KEY;
 
 const sendOTPEmail = async (toEmail, otp) => {
     const email = new SibApiV3Sdk.SendSmtpEmail();
