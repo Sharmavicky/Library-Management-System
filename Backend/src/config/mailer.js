@@ -36,7 +36,7 @@ const sendOTPEmail = async (toEmail, otp) => {
         console.log("✅ OTP email sent, messageId:", result.messageId);
         return result;
     } catch (err) {
-        console.error("❌ Brevo error:", err.message);
+        console.error("❌ Brevo full error:", JSON.stringify(err.response?.body || err.message, null, 2));
         const error = new Error(`Failed to send OTP email to ${toEmail}`);
         error.code = "EMAIL_SEND_FAILURE";
         throw error;
@@ -66,8 +66,10 @@ const sendReminderEmail = async (toEmail, username, daysLeft, dueDate) => {
 
     try {
         await apiInstance.sendTransacEmail(email);
+        console.log(`✅ Reminder email sent to ${toEmail} for book due in ${daysLeft} day(s)`);
+        return;
     } catch (err) {
-        console.error("❌ Brevo reminder error:", err.message);
+        console.error("❌ Brevo reminder error:", JSON.stringify(err.response?.body || err.message, null, 2));
     }
 };
 
