@@ -175,12 +175,12 @@ const sendOverdueReminders = async () => {
     Change to "0 9 * * *" for sending reminders every day at 9 AM
 */
 const startOverdueCron = () => {
-    cron.schedule("0 2 * * *", runOverDueJob, {
+    cron.schedule("* * * * *", runOverDueJob, {
         scheduled: true,
         timezone:  "Asia/Kolkata"       // server timezone
     });
 
-    cron.schedule("0 9 * * *", sendOverdueReminders, {
+    cron.schedule("* * * * *", sendOverdueReminders, {
         scheduled: true,
         timezone:  "Asia/Kolkata"       // server timezone
     });
