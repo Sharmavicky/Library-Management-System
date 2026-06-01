@@ -9,7 +9,6 @@ import AdminRequests from "./pages/admin/AdminRequests";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import VerifyOTP from "./pages/VerifyOTP";
 
 {/* admin routing files */}
 import AdminDashboard from "./pages/admin/AdminDashboard";
