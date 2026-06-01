@@ -31,11 +31,6 @@ const userSchema = new mongoose.Schema({
         default: true,
         required: true
     },
-    isVerified: {
-        type: Boolean,
-        default: false,
-        required: true
-    }
 }, { timestamps: true });
 
 // create user model and export it.

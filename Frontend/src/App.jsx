@@ -36,7 +36,6 @@ export default function App() {
                 <Route path="/" element={ <Landing /> } />
                 <Route path="/login" element={ <Login /> } />
                 <Route path="/register" element={ <Register /> } />
-                <Route path="/verify-otp" element={ <VerifyOTP /> } />
 
                 {/* protected admin route */}
                 <Route path="/admin/dashboard" element={ <AdminRoute><AdminDashboard /></AdminRoute>}/>

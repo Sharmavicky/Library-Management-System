@@ -25,9 +25,4 @@ const refreshTokenSchema = z.object({
         .min(1, "Refresh Token needed!!")
 });
 
-const verifyOTPSchema = z.object({
-    email: z.string().email("Please enter a valid email").trim(),
-    otp:   z.string().length(6, "OTP must be 6 digits").regex(/^\d+$/, "OTP must be numeric"),
-});
-
 module.exports = { registerSchema, loginSchema, refreshTokenSchema, verifyOTPSchema }

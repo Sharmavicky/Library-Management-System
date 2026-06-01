@@ -60,11 +60,6 @@ export default function LoginPage({ onNavigateRegister }) {
                 navigate("/member/dashboard");
             }
         } catch (err) {
-            const errData = err.response?.data;
-            if (errData?.requiredVerification) {
-                navigate("/verify-otp", { state: { email: errData.email } });
-                return;
-            }
             setError(err.response?.data?.message || "Login failed. Please try again.");
         } finally {
             setLoading(false);
