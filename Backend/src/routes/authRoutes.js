@@ -9,16 +9,13 @@ const {
     registerUser,
     loginUser,
     logoutUser,
-    refreshAccessToken,
-    verifyOTP,
-    resendOTP
+    refreshAccessToken
 } = require("../../controllers/auth-controller");
 
 const {
     registerSchema,
     loginSchema,
-    refreshTokenSchema,
-    verifyOTPSchema
+    refreshTokenSchema
 } = require("../validators/authValidator");
 const { authLimiter, refreshTokenLimiter } = require("../middleware/rateLimiter");
 

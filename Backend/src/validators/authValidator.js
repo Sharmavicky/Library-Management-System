@@ -25,4 +25,4 @@ const refreshTokenSchema = z.object({
         .min(1, "Refresh Token needed!!")
 });
 
-module.exports = { registerSchema, loginSchema, refreshTokenSchema, verifyOTPSchema }
+module.exports = { registerSchema, loginSchema, refreshTokenSchema }
