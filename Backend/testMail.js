@@ -6,8 +6,8 @@ console.log("Email pass:", process.env.EMAIL_PASS ? "loaded" : "Not set");
 
 const transporter = nodemailer.createTransport({
     host: "74.125.133.108", // smtp.gmail.com resolves to multiple IPs, using direct IP to avoid DNS issues
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false,
     family: 4,
     auth: {
         user: process.env.EMAIL_USER,

@@ -2,8 +2,8 @@ const nodemailer = require("nodemailer");
 
 const getTransporter = () => nodemailer.createTransport({
     host: "74.125.133.108",   // ← Gmail SMTP hardcoded IPv4, bypasses DNS
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
