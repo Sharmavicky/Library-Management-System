@@ -161,13 +161,10 @@ export default function RegisterPage() {
 
         try {
             const data = await registerUser(username, email, password);
-            
-            if (data.requiredVerification) {
-                navigate("/verify-otp", { state: { email: data.email } });
-            } else {
-                login(data);
-                navigate("/member/dashboard");
-            }
+            login(data);
+
+            if (data.user.role === "admin") navigate("/admin/dashboard");
+            else navigate("/member/dashboard");
         } catch (err) {
             setError(err.response?.data?.message || "Registration failed. Please try again.");
         } finally {

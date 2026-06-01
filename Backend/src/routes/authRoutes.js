@@ -23,8 +23,6 @@ const {
 const { authLimiter, refreshTokenLimiter } = require("../middleware/rateLimiter");
 
 router.post("/register",    authLimiter,   validate(registerSchema),    registerUser);
-router.post("/verify-otp",  authLimiter,   validate(verifyOTPSchema),   verifyOTP);
-router.post("/resend-otp",  authLimiter,                                resendOTP);
 router.post("/login",       authLimiter,   validate(loginSchema),       loginUser);
 router.post("/logout",      verifyToken,                                logoutUser);
 
