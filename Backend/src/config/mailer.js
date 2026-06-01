@@ -1,15 +1,23 @@
 const nodemailer = require("nodemailer");
 
 const getTransporter = () => nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,           // use SSL on 465
     auth: {
-        user: process.env.EMAIL_USER,  // your gmail address
-        pass: process.env.EMAIL_PASS,  // gmail app password (not your real password)
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
     },
+    connectionTimeout: 10000,   // fail fast after 10s 
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
 });
 
 const sendOTPEmail = async (toEmail, otp) => {
     const transporter = getTransporter();
+
+    console.log("📧 Attempting to send OTP to:", toEmail);
+
     const info = await transporter.sendMail({
         from:    `"ReadMatrix" <${process.env.EMAIL_USER}>`,
         to:      toEmail,
@@ -33,8 +41,13 @@ const sendOTPEmail = async (toEmail, otp) => {
         `,
     });
 
+    console.log("✅ Email sent:", info.messageId);
+    console.log("📬 Accepted:", info.accepted);
+    console.log("❌ Rejected:", info.rejected);
+
     // check for invalid email and other errors
     if (info.rejected && info.rejected.length > 0) {
+        console.error("❌ sendMail error:", err.message);
         const error = new Error(`Failed to send OTP email to ${toEmail}`);
         error.code = "EMAIL_SEND_FAILURE";
         throw error;

@@ -83,10 +83,11 @@ exports.registerUser = async (req, res, next) => {
         // generate OTP and save in redis
         const otp = generateOTP();
         await saveOTP(email, otp);
-
+        console.log("Sending OTP to:", email, "| OTP:", otp);
         try {
             await sendOTPEmail(email, otp);
         } catch (mailErr) {
+            console.error("Mail error caught:", mailErr.message);
             // if email sending fails, delete the created user and OTP to avoid orphan records
             await User.findByIdAndDelete(newUser._id);
             await deleteOTP(email); // cleanup OTP if email sending fails
