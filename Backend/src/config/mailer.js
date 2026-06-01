@@ -3,7 +3,8 @@ const nodemailer = require("nodemailer");
 const getTransporter = () => nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 465,
-    secure: true,           // use SSL on 465
+    secure: true,          // use SSL on 465
+    family: 4,            // prefer IPv4
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
