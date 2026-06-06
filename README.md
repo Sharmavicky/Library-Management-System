@@ -1,5 +1,7 @@
 # 📚 Library Management System
 
+**Live Demo:** [ReadMatrix — Smart Library Management System](https://readmatrix.netlify.app/)
+
 A comprehensive, full-stack Library Management System built with the MERN stack (MongoDB, Express.js, React, Node.js). This system is designed to streamline library operations, offering distinct role-based access for both Administrators and Members. It encompasses everything from book inventory management and issuance tracking to fine calculations, automated overdue jobs, and analytical reports.
 
 ---
